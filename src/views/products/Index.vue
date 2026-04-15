@@ -35,6 +35,7 @@
             :key="product.id"
             :product="product"
             @open-competitors="openCompetitors(product)"
+            @open-stocks="openStocks(product)"
           />
         </div>
 
@@ -58,6 +59,20 @@
         @close="showInspector = false"
       />
     </ion-modal>
+
+    <!-- Stock Inspector Modal -->
+    <ion-modal
+      :is-open="showStocks"
+      :initial-breakpoint="0.75"
+      :breakpoints="[0, 0.5, 0.92]"
+      @didDismiss="showStocks = false"
+    >
+      <StockInspector
+        v-if="selectedProduct"
+        :product="selectedProduct"
+        @close="showStocks = false"
+      />
+    </ion-modal>
   </ion-page>
 </template>
 
@@ -73,12 +88,14 @@ import { cubeOutline } from 'ionicons/icons'
 
 import ProductCard from '@/components/products/ProductCard.vue'
 import CompetitorInspector from './CompetitorInspector.vue'
+import StockInspector from './StockInspector.vue'
 import { fetchProducts } from '@/services/productService'
 
 const loading = ref(false)
 const products = ref([])
 const searchTerm = ref('')
 const showInspector = ref(false)
+const showStocks = ref(false)
 const selectedProduct = ref(null)
 
 const filteredProducts = computed(() => {
@@ -98,6 +115,11 @@ function onSearch(event) {
 function openCompetitors(product) {
   selectedProduct.value = product
   showInspector.value = true
+}
+
+function openStocks(product) {
+  selectedProduct.value = product
+  showStocks.value = true
 }
 
 async function loadProducts() {

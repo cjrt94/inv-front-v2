@@ -32,3 +32,9 @@ export async function fetchCompetitors(productId) {
   const snapshot = await getDocs(ref)
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 }
+
+export async function fetchProductStocks(productId) {
+  const ref = collection(db, 'products', productId, 'stocks')
+  const snapshot = await getDocs(ref)
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+}

@@ -17,7 +17,8 @@
     </div>
 
     <div class="product-card__footer">
-      <span class="product-card__stock">
+      <span class="product-card__stock" @click.stop="emit('open-stocks')">
+        <ion-icon :icon="storefrontOutline" />
         Stock: <strong>{{ product.stock ?? 0 }}</strong>
       </span>
       <span class="product-card__competitors-btn" @click.stop="emit('open-competitors')">
@@ -29,13 +30,13 @@
 
 <script setup>
 import { IonIcon } from '@ionic/vue'
-import { statsChartOutline } from 'ionicons/icons'
+import { statsChartOutline, storefrontOutline } from 'ionicons/icons'
 
 defineProps({
   product: { type: Object, required: true }
 })
 
-const emit = defineEmits(['click', 'open-competitors'])
+const emit = defineEmits(['click', 'open-competitors', 'open-stocks'])
 
 function formatCurrency(val) {
   if (val == null) return 'S/ —'
