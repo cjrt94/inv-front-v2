@@ -1,0 +1,31 @@
+@mixin flex($direction: row, $justify: flex-start, $align: stretch) {
+  display: flex;
+  flex-direction: $direction;
+  justify-content: $justify;
+  align-items: $align;
+}
+
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin card {
+  background: #ffffff;
+  border-radius: $border-radius;
+  box-shadow: $shadow-sm;
+  padding: $space-16;
+}
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin currency($color: $black) {
+  font-family: $font-family;
+  font-weight: 600;
+  color: $color;
+}

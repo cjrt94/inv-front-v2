@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+// Base
+@import './base/reset';
+@import './base/config';
+
+// Utilities
+@import './utilities/mixins';
+
+// Components
+@import './components/card';
+
+// ── Global overrides for Ionic ────────────────────────────────────────
+ion-content {
+  --background: var(--ion-background-color, #f5f7f9);
+}
+
+ion-toolbar {
+  --background: #{$primary};
+  --color: #ffffff;
+}
+
+ion-title {
+  font-family: $font-family;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+ion-tab-bar {
+  --background: #ffffff;
+  border-top: 1px solid $lighter-grey;
+}
+
+ion-tab-button {
+  --color: #{$grey};
+  --color-selected: #{$primary};
+  font-size: 10px;
+  font-family: $font-family;
+}
+
+ion-item {
+  --background: #ffffff;
+  --border-color: #{$lighter-grey};
+  font-family: $font-family;
+  font-size: $base-font-size;
+}
+
+ion-select {
+  font-family: $font-family;
+  font-size: $base-font-size;
+}
+
+ion-input {
+  font-family: $font-family;
+  font-size: $base-font-size;
+}
+
+ion-button {
+  --border-radius: #{$border-radius-sm};
+  font-family: $font-family;
+  font-weight: 600;
+  font-size: $base-font-size;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+ion-searchbar {
+  --background: #ffffff;
+  --border-radius: #{$border-radius-sm};
+  --box-shadow: #{$shadow-sm};
+  font-family: $font-family;
+  font-size: $base-font-size;
+}
+
+// ── Utilities ────────────────────────────────────────────────────────
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: $darker-grey;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing;
+  padding: $space-16 $space-16 $space-8;
+}
+
+.empty-state {
+  @include flex(column, center, center);
+  padding: $space-48 $space-16;
+  text-align: center;
+  color: $grey;
+  gap: $space-8;
+
+  ion-icon {
+    font-size: 48px;
+    opacity: 0.4;
+  }
+
+  p {
+    font-size: 14px;
+  }
+}
+
+.ranking-list {
+  @include card;
+  margin: 0 $space-16 $space-16;
+
+  &__title {
+    font-size: 13px;
+    font-weight: 700;
+    color: $darker-grey;
+    text-transform: uppercase;
+    letter-spacing: $letter-spacing;
+    margin-bottom: $space-12;
+  }
+
+  &__item {
+    @include flex(row, space-between, center);
+    padding: $space-8 0;
+    border-bottom: 1px solid $lighter-grey;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__rank {
+    width: 24px;
+    font-size: 12px;
+    font-weight: 700;
+    color: $primary;
+    flex-shrink: 0;
+  }
+
+  &__name {
+    flex: 1;
+    font-size: 13px;
+    color: $black;
+    @include truncate;
+    padding: 0 $space-8;
+  }
+
+  &__value {
+    font-size: 13px;
+    font-weight: 600;
+    color: $black;
+    flex-shrink: 0;
+  }
+}

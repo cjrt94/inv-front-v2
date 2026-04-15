@@ -1,0 +1,7 @@
+{
+  "name": "inv-front-v2",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}

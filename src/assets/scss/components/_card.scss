@@ -1,0 +1,111 @@
+.kpi-card {
+  @include card;
+  @include flex(column, flex-start, flex-start);
+  gap: $space-4;
+  height: 100%;
+
+  &__label {
+    font-size: 11px;
+    color: $dark-grey;
+    letter-spacing: $letter-spacing;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  &__value {
+    font-size: 20px;
+    font-weight: 700;
+    color: $black;
+    line-height: 1.2;
+  }
+
+  &__value--primary {
+    color: $primary;
+  }
+
+  &__value--error {
+    color: $error;
+  }
+}
+
+.product-card {
+  background: #ffffff;
+  border-radius: $border-radius-sm;
+  padding: $space-12 $space-16;
+  margin-bottom: $space-8;
+  box-shadow: $shadow-sm;
+
+  &__header {
+    @include flex(row, space-between, center);
+    margin-bottom: $space-4;
+  }
+
+  &__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: $black;
+    @include truncate;
+    max-width: 65%;
+  }
+
+  &__sku {
+    font-size: 11px;
+    color: $dark-grey;
+    background: $lighter-grey;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  &__prices {
+    @include flex(row, flex-start, center);
+    gap: $space-16;
+    margin-top: $space-4;
+  }
+
+  &__price {
+    @include flex(column, flex-start, flex-start);
+
+    span:first-child {
+      font-size: 10px;
+      color: $dark-grey;
+      text-transform: uppercase;
+      letter-spacing: $letter-spacing;
+    }
+
+    strong {
+      font-size: 15px;
+      font-weight: 700;
+      color: $black;
+    }
+
+    &--purchase strong {
+      color: $darker-grey;
+    }
+
+    &--sale strong {
+      color: $primary;
+    }
+  }
+
+  &__footer {
+    @include flex(row, space-between, center);
+    margin-top: $space-8;
+  }
+
+  &__stock {
+    font-size: 12px;
+    color: $dark-grey;
+
+    strong {
+      color: $black;
+    }
+  }
+
+  &__competitors-btn {
+    font-size: 12px;
+    color: $primary;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}

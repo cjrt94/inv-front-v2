@@ -1,0 +1,66 @@
+// ── Ionic CSS Variables ──────────────────────────────────────────────
+:root {
+  --ion-color-primary: #b51a3e;
+  --ion-color-primary-rgb: 181, 26, 62;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #9e1636;
+  --ion-color-primary-tint: #bc3151;
+
+  --ion-color-secondary: #70ae98;
+  --ion-color-secondary-rgb: 112, 174, 152;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #629886;
+  --ion-color-secondary-tint: #7eb6a2;
+
+  --ion-font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  --ion-background-color: #f5f7f9;
+  --ion-toolbar-background: #b51a3e;
+  --ion-toolbar-color: #ffffff;
+  --ion-tab-bar-background: #ffffff;
+  --ion-tab-bar-border-color: #ebebeb;
+  --ion-item-background: #ffffff;
+}
+
+// ── Brand Colors ─────────────────────────────────────────────────────
+$primary: #b51a3e;
+$secondary: #9e1636;
+
+$black: #191919;
+$darker-grey: #707070;
+$dark-grey: #8f8f8f;
+$grey: #adadad;
+$light-grey: #cccccc;
+$lighter-grey: #ebebeb;
+$white: #f8f8f8;
+
+$success: #b51a3e;
+$error: #d8000c;
+$warning: #f0a500;
+
+// ── Typography ───────────────────────────────────────────────────────
+$font-family: 'Poppins', -apple-system, sans-serif;
+$base-font-size: 14px;
+$letter-spacing: 0.3px;
+$line-height: 1.4;
+
+// ── Layout ───────────────────────────────────────────────────────────
+$border-radius: 12px;
+$border-radius-sm: 8px;
+$border-radius-lg: 20px;
+
+// ── Spacing ──────────────────────────────────────────────────────────
+$space-4: 4px;
+$space-8: 8px;
+$space-12: 12px;
+$space-16: 16px;
+$space-20: 20px;
+$space-24: 24px;
+$space-32: 32px;
+$space-48: 48px;
+
+// ── Shadows ──────────────────────────────────────────────────────────
+$shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.08);
+$shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.12);

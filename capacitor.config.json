@@ -1,0 +1,19 @@
+{
+  "appId": "com.inv.app",
+  "appName": "Imv",
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  },
+  "ios": {
+    "minVersion": "14.0"
+  },
+  "android": {
+    "minWebViewVersion": 60
+  }
+}
