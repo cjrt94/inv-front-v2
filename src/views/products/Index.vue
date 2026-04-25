@@ -7,50 +7,54 @@
     </ion-header>
 
     <ion-content>
-      <div class="search-wrapper">
-        <ion-searchbar
-          v-model="searchTerm"
-          placeholder="Buscar por nombre o SKU..."
-          :debounce="300"
-          @ionInput="onSearch"
-        />
-      </div>
       <ion-refresher slot="fixed" @ionRefresh="onRefresh">
         <ion-refresher-content />
       </ion-refresher>
 
-      <!-- Loading -->
-      <template v-if="loading">
-        <div v-for="n in 8" :key="n" class="product-card" style="opacity: 0.4">
-          <ion-skeleton-text :animated="true" style="height: 16px; width: 70%; margin-bottom: 8px" />
-          <ion-skeleton-text :animated="true" style="height: 14px; width: 40%" />
-        </div>
-      </template>
-
-      <!-- Product list -->
-      <template v-else>
-        <div v-if="filteredProducts.length" class="products-list">
-          <ProductCard
-            v-for="product in filteredProducts"
-            :key="product.id"
-            :product="product"
-            @open-competitors="openCompetitors(product)"
-            @open-stocks="openStocks(product)"
+      <div class="page-container">
+        <div class="search-wrapper">
+          <ion-searchbar
+            v-model="searchTerm"
+            placeholder="Buscar por nombre o SKU..."
+            :debounce="300"
+            @ionInput="onSearch"
           />
         </div>
 
-        <div v-else class="empty-state">
-          <ion-icon :icon="cubeOutline" />
-          <p>{{ searchTerm ? 'Sin resultados para tu búsqueda' : 'Sin productos' }}</p>
-        </div>
-      </template>
+        <!-- Loading -->
+        <template v-if="loading">
+          <div class="products-list">
+            <div v-for="n in 8" :key="n" class="product-card" style="opacity: 0.4">
+              <ion-skeleton-text :animated="true" style="height: 16px; width: 70%; margin-bottom: 8px" />
+              <ion-skeleton-text :animated="true" style="height: 14px; width: 40%" />
+            </div>
+          </div>
+        </template>
+
+        <!-- Product list -->
+        <template v-else>
+          <div v-if="filteredProducts.length" class="products-list">
+            <ProductCard
+              v-for="product in filteredProducts"
+              :key="product.id"
+              :product="product"
+              @open-competitors="openCompetitors(product)"
+              @open-stocks="openStocks(product)"
+            />
+          </div>
+
+          <div v-else class="empty-state">
+            <ion-icon :icon="cubeOutline" />
+            <p>{{ searchTerm ? 'Sin resultados para tu búsqueda' : 'Sin productos' }}</p>
+          </div>
+        </template>
+      </div>
     </ion-content>
 
     <!-- Competitor Inspector Modal -->
     <ion-modal
       :is-open="showInspector"
-      :initial-breakpoint="0.92"
-      :breakpoints="[0, 0.5, 0.92]"
+      v-bind="competitorModalProps"
       @didDismiss="showInspector = false"
     >
       <CompetitorInspector
@@ -63,8 +67,7 @@
     <!-- Stock Inspector Modal -->
     <ion-modal
       :is-open="showStocks"
-      :initial-breakpoint="0.75"
-      :breakpoints="[0, 0.5, 0.92]"
+      v-bind="stockModalProps"
       @didDismiss="showStocks = false"
     >
       <StockInspector
@@ -90,6 +93,21 @@ import ProductCard from '@/components/products/ProductCard.vue'
 import CompetitorInspector from './CompetitorInspector.vue'
 import StockInspector from './StockInspector.vue'
 import { fetchProducts } from '@/services/productService'
+import { useBreakpoint } from '@/composables/useBreakpoint'
+
+const isLargeScreen = useBreakpoint('(min-width: 768px)')
+
+const competitorModalProps = computed(() =>
+  isLargeScreen.value
+    ? { class: 'competitor-modal' }
+    : { initialBreakpoint: 0.92, breakpoints: [0, 0.5, 0.92] }
+)
+
+const stockModalProps = computed(() =>
+  isLargeScreen.value
+    ? { class: 'stock-modal' }
+    : { initialBreakpoint: 0.75, breakpoints: [0, 0.5, 0.92] }
+)
 
 const loading = ref(false)
 const products = ref([])
@@ -151,9 +169,38 @@ onMounted(loadProducts)
 .search-wrapper {
   padding: 12px 8px 4px;
   background: #ffffff;
+
+  @include respond-to(md) {
+    background: transparent;
+    max-width: 480px;
+    padding: $space-12 $space-16 $space-8;
+  }
 }
 
 .products-list {
   padding: $space-8 $space-12;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: $space-8;
+
+  :deep(.product-card),
+  > .product-card {
+    margin-bottom: 0;
+    min-width: 0;
+  }
+
+  @include respond-to(md) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-12;
+    padding: $space-8 $space-16 $space-16;
+  }
+
+  @include respond-to(lg) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @include respond-to(xl) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 </style>

@@ -1,4 +1,4 @@
-# Inv. — Panel de Administración
+# Imv. — Panel de Administración
 
 Aplicación móvil iOS para administración de inventario y ventas, construida con Vue 3 + Ionic + Capacitor + Firebase.
 
@@ -161,3 +161,53 @@ Reemplazado el patrón `<ion-label> + <ion-input>` por `label` y `label-placemen
 ### UI: padding del searchbar en Products
 
 Aumentado el padding vertical del toolbar del searchbar (`--padding-top` / `--padding-bottom`) de 8px a 12px para separarlo mejor del título.
+
+### Soporte para iPad (v4.1.0)
+
+**Shell de navegación adaptativo.** `App.vue` envuelve `<ion-router-outlet>` en `<ion-split-pane content-id="main-content" when="md">` con un `<ion-menu>` lateral. En iPad (≥768px) el menú aparece fijo a la izquierda con items Dashboard / Productos y un footer de usuario con avatar, email, rol y botón de logout. En iPhone, el menú está deshabilitado por `:disabled="!isLargeScreen"` (no se abre como drawer) y `Tabs.vue` mantiene su `<ion-tab-bar>` clasificada con `ion-hide-md-up` para que aparezca solo bajo el breakpoint.
+
+> **Importante:** el `<ion-split-pane>` debe ir en `App.vue` a nivel de `<ion-app>`, no envuelto en un `<ion-page>`. La primera implementación lo puso dentro de `Tabs.vue/<ion-page>` y el menú nunca renderizaba.
+
+**Estado de auth para el menú.** Por la decisión documentada en memoria (router guard usa `onAuthStateChanged` directo, no inicializa Pinia), `authStore.user` queda `null` en cold start aunque haya sesión Firebase persistida. `App.vue` se suscribe a `onAuthStateChanged` y mantiene un `firebaseUser` reactivo local — el `menuDisabled` depende de eso, no del store.
+
+**Composable `useBreakpoint`.** En `src/composables/useBreakpoint.js`. Wrapper sobre `window.matchMedia` con listener reactivo. Usado en `App.vue`, `dashboard/Index.vue` y `products/Index.vue` para condicionar comportamiento (props de modal, etc.).
+
+**Mixin SCSS `respond-to($bp)`.** En `_mixins.scss` con map de breakpoints `sm/md/lg/xl` (576/768/992/1200). Reemplazó las media queries inline.
+
+**Layouts responsive:**
+
+- *Dashboard:* contenido envuelto en `.page-container` (max-width 1280px en xl). Filtros pasan de lista vertical a fila horizontal flex en md+. KPIs `size="6" size-sm="4" size-lg="3"` (2/3/4 cols). Top products + rankings van en `.dashboard-bottom-grid` con `grid-template-columns: 1fr 1fr` en md (TopProducts ocupa fila completa) y `1fr 1fr 1fr` en lg.
+- *Products:* `.products-list` pasó de flow vertical a CSS grid `repeat(N, minmax(0, 1fr))` con N = 1/2/3/4 según breakpoint. **Nota:** el `minmax(0, 1fr)` en vez de `1fr` es esencial — sin el `min-width: 0` implícito, los nombres largos con `white-space: nowrap` expanden la columna y los cards exceden el viewport.
+- *Modales en iPad:* en lugar del default centered (~600×500) que dejaba huecos, cada modal recibe dimensiones explícitas via clase global en `styles.scss`:
+  - `.competitor-modal`: 90vw × 85vh, max 1000×800. Layout 2 cols (chart 3fr + lista 2fr) dentro del inspector.
+  - `.stock-modal`: 80vw × 80vh, max 600×700.
+  - `.date-picker-modal`: 350×408 (tamaño natural del `ion-datetime`).
+  Las clases se aplican via `v-bind` con `useBreakpoint` — en iPhone se mantiene el comportamiento sheet con breakpoints.
+
+**`TARGETED_DEVICE_FAMILY = "1,2"`** ya estaba seteado en `project.pbxproj`, así que el target nativo no requirió cambios — todo el trabajo fue en la capa web.
+
+### Multi-device push notifications
+
+**Antes:** `notificationService.js` escribía `{ token: tokenValue }` (string). Si un usuario abría sesión en iPhone + iPad, el segundo dispositivo pisaba al primero y solo el último recibía pushes. Las Cloud Functions ya iteraban `tokens` (array), así que la incompatibilidad real estaba en el frontend.
+
+**Frontend:**
+- `saveTokenToFirestore` usa `arrayUnion(tokenValue)` sobre el campo `tokens`. Acumula sin duplicar.
+- Variable `currentToken` en module scope guarda el token registrado en este dispositivo.
+- `unregisterCurrentDeviceToken()` exportado, hace `arrayRemove(currentToken)` y se llama antes de `signOut(auth)`. Está conectado en dos puntos: el `logout()` de `App.vue` (botón del menú lateral) y la action `logout()` del Pinia store (botón del header en Dashboard, iPhone).
+
+**Backend (`imv-functions/functions/notifications.js`):**
+- Helper `getUserTokens(data)` lee `tokens[]` y cae a `token` (string) si el doc aún no migró.
+- `sendToUser(userId, notification)` usa `admin.messaging().sendMulticast()` (un batch en lugar del loop secuencial de antes) y limpia tokens inválidos con `arrayRemove` cuando el error es `messaging/registration-token-not-registered`, `messaging/invalid-registration-token` o `messaging/invalid-argument`.
+- `Promise.allSettled` orquesta los 3 destinatarios en paralelo. Cada `sendToUser` tiene try/catch en cada paso (fetch de doc, sendMulticast, cleanup) para que un fallo aislado no rompa el envío a los demás usuarios.
+
+### Brand: "Imv." en lugar de "Inv."
+
+El nombre del producto es **Imv.** (con M). El path del repo `inv-front-v2` es legado. Corregido en `App.vue` (header del sidebar), `index.html` (title) y este archivo.
+
+### Versión 4.1.0 / build 15
+
+- `MARKETING_VERSION` 4.0.3 → 4.1.0 (en `ios/App/App.xcodeproj/project.pbxproj`)
+- `CURRENT_PROJECT_VERSION` 14 → 15
+- `package.json` 4.0.3 → 4.1.0
+
+Para release: `npm run build && npx cap sync ios`, luego Xcode → Any iOS Device → Product → Archive → Distribute App → App Store Connect → Upload.

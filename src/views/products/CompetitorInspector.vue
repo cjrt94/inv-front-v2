@@ -38,37 +38,43 @@
           <span>{{ position.label }}</span>
         </div>
 
-        <!-- Price comparison chart -->
-        <p class="section-title">Comparativa de precios</p>
-        <div class="inspector-chart">
-          <apexchart
-            type="bar"
-            :height="chartHeight"
-            :options="chartOptions"
-            :series="series"
-          />
-          <div v-if="selectedName" class="inspector-chart__label">
-            {{ selectedName }}
-          </div>
-        </div>
-
-        <!-- Competitor list -->
-        <p class="section-title">Detalle</p>
-        <div class="inspector-list">
-          <div
-            v-for="comp in sortedCompetitors"
-            :key="comp.id"
-            class="inspector-item"
-          >
-            <div class="inspector-item__header">
-              <span class="inspector-item__name">{{ comp.name }}</span>
-              <span class="inspector-item__diff" :class="diffClass(comp.price)">
-                {{ diffLabel(comp.price) }}
-              </span>
+        <div class="inspector-body">
+          <!-- Price comparison chart -->
+          <div class="inspector-body__col">
+            <p class="section-title">Comparativa de precios</p>
+            <div class="inspector-chart">
+              <apexchart
+                type="bar"
+                :height="chartHeight"
+                :options="chartOptions"
+                :series="series"
+              />
+              <div v-if="selectedName" class="inspector-chart__label">
+                {{ selectedName }}
+              </div>
             </div>
-            <div class="inspector-item__footer">
-              <strong>{{ formatCurrency(comp.price) }}</strong>
-              <span v-if="comp.url" class="inspector-item__url">{{ comp.domain || comp.url }}</span>
+          </div>
+
+          <!-- Competitor list -->
+          <div class="inspector-body__col">
+            <p class="section-title">Detalle</p>
+            <div class="inspector-list">
+              <div
+                v-for="comp in sortedCompetitors"
+                :key="comp.id"
+                class="inspector-item"
+              >
+                <div class="inspector-item__header">
+                  <span class="inspector-item__name">{{ comp.name }}</span>
+                  <span class="inspector-item__diff" :class="diffClass(comp.price)">
+                    {{ diffLabel(comp.price) }}
+                  </span>
+                </div>
+                <div class="inspector-item__footer">
+                  <strong>{{ formatCurrency(comp.price) }}</strong>
+                  <span v-if="comp.url" class="inspector-item__url">{{ comp.domain || comp.url }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -271,6 +277,30 @@ onMounted(async () => {
   &--middle {
     background: rgba(240, 165, 0, 0.1);
     color: $warning;
+  }
+}
+
+.inspector-body {
+  @include respond-to(md) {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: $space-16;
+    padding: 0 $space-16;
+    align-items: start;
+
+    &__col {
+      min-width: 0;
+    }
+
+    .inspector-chart,
+    .inspector-list {
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    .section-title {
+      padding-left: 0;
+    }
   }
 }
 

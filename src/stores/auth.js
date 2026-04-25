@@ -5,8 +5,7 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth'
-import { registerPushNotifications } from '@/services/notificationService'
-
+import { unregisterCurrentDeviceToken } from '@/services/notificationService'
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
@@ -33,11 +32,10 @@ export const useAuthStore = defineStore('auth', {
         displayName: user.displayName,
         role: token.claims.admin ? 'admin' : 'editor'
       }
-
-      registerPushNotifications().catch(console.error)
     },
 
     async logout() {
+      await unregisterCurrentDeviceToken()
       await signOut(auth)
       this.user = null
     },

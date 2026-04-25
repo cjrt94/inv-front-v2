@@ -99,6 +99,37 @@ ion-searchbar {
   }
 }
 
+.page-container {
+  width: 100%;
+  margin: 0 auto;
+
+  @include respond-to(xl) {
+    max-width: 1280px;
+  }
+}
+
+ion-modal.date-picker-modal {
+  --width: 350px;
+  --height: 408px;
+  --border-radius: #{$border-radius};
+}
+
+ion-modal.competitor-modal {
+  --width: 90vw;
+  --max-width: 1000px;
+  --height: 85vh;
+  --max-height: 800px;
+  --border-radius: #{$border-radius};
+}
+
+ion-modal.stock-modal {
+  --width: 80vw;
+  --max-width: 600px;
+  --height: 80vh;
+  --max-height: 700px;
+  --border-radius: #{$border-radius};
+}
+
 .ranking-list {
   @include card;
   margin: 0 $space-16 $space-16;
