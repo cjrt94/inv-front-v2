@@ -197,8 +197,10 @@ Aumentado el padding vertical del toolbar del searchbar (`--padding-top` / `--pa
 
 **Backend (`imv-functions/functions/notifications.js`):**
 - Helper `getUserTokens(data)` lee `tokens[]` y cae a `token` (string) si el doc aún no migró.
-- `sendToUser(userId, notification)` usa `admin.messaging().sendMulticast()` (un batch en lugar del loop secuencial de antes) y limpia tokens inválidos con `arrayRemove` cuando el error es `messaging/registration-token-not-registered`, `messaging/invalid-registration-token` o `messaging/invalid-argument`.
-- `Promise.allSettled` orquesta los 3 destinatarios en paralelo. Cada `sendToUser` tiene try/catch en cada paso (fetch de doc, sendMulticast, cleanup) para que un fallo aislado no rompa el envío a los demás usuarios.
+- `sendToUser(userId, notification)` itera los tokens con `Promise.all` de `send()` individuales (HTTP v1) y limpia los inválidos con `arrayRemove` cuando el error es `messaging/registration-token-not-registered`, `messaging/invalid-registration-token` o `messaging/invalid-argument`.
+- `Promise.allSettled` orquesta los 3 destinatarios en paralelo. Cada `sendToUser` tiene try/catch en cada paso (fetch de doc, send, cleanup) para que un fallo aislado no rompa el envío a los demás usuarios.
+
+> **Nota sobre `sendMulticast()`.** La primera versión del backend usaba `admin.messaging().sendMulticast()`, que en `firebase-admin <11` pega al endpoint legacy `/batch` de FCM. Google retiró ese endpoint el 22-06-2024 (devuelve `404`), y los pushes dejaron de llegar a *cualquier* dispositivo. La fix mínima sin upgrade del SDK fue reemplazar el batch por un loop paralelo de `send()` (que pasa por HTTP v1 y sigue activo). El comportamiento externo (formato de respuesta, cleanup) quedó idéntico.
 
 ### Brand: "Imv." en lugar de "Inv."
 
