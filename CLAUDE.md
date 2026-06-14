@@ -18,7 +18,7 @@ Aplicación móvil iOS para administración de inventario y ventas, construida c
 src/
 ├── assets/scss/         # Estilos globales y variables
 ├── components/
-│   ├── dashboard/       # KpiCard, SalesChart, RankingList, TopProductsList
+│   ├── dashboard/       # KpiCard, SalesChart, RankingList, TopProductsList, FeaturedProducts
 │   └── products/        # ProductCard
 ├── firebase/            # Inicialización de Firebase
 ├── router/              # Vue Router con guards de autenticación
@@ -48,6 +48,16 @@ npx cap sync ios
 ---
 
 ## Cambios realizados
+
+### Dashboard: productos destacados, atajos de fecha y fix de huso horario (v4.2.0)
+
+Paridad parcial con el dashboard de imv-back. Toda la lógica de cómputo vive en `services/salesService.js` (funciones puras sobre las ventas ya cargadas — no hace queries nuevas); los componentes solo presentan.
+
+- **Productos destacados** (`components/dashboard/FeaturedProducts.vue`): lista los productos con `featured === true` (flag global en Firestore) con unidades + ingreso en el período. Se nutre de `computeFeaturedTable(sales, products)`; incluye destacados sin ventas en 0 y ordena por ingreso. Las NC (07) no entran; ingreso = precio con IGV − descuento × cantidad (mismo cálculo que `computeTopProducts`). Solo se renderiza si hay al menos un producto destacado. **A diferencia de imv-back, no lleva gráfico** — el chart multi-serie quedaba ilegible en pantalla de teléfono, así que se dejó solo el listado (sin toggle ingreso/unidades).
+- **Atajos de rango de fecha** (`Index.vue` + `DATE_SHORTCUTS`/`getDateRangeShortcut` en el servicio): fila siempre visible arriba de los filtros — Hoy / Ayer / Esta semana / Este mes / Mes pasado / Este año. Un toque setea `startDate`/`endDate` (strings `YYYY-MM-DD`) y dispara `loadData()`. Misma lógica que imv-back (semana inicia lunes, `end = hoy` donde aplica). Scroll horizontal en móvil, wrap en md+.
+- **Fix de huso horario en el chart de ventas** (`computeSalesByDay`): antes agrupaba por día **UTC** (`toISOString()`), y como Lima es UTC−5 las ventas después de las ~19:00 caían al día siguiente → barras fantasma (p. ej. hoy 13 ya mostraba una barra en el "14"). Ahora agrupa por día **local** vía el helper `toDateStr` (componentes locales, no UTC), consistente con los atajos y con imv-back (que nunca tuvo el bug: ya usaba `getFullYear/getMonth/getDate`).
+
+> **Nota:** las versiones nativas de iOS (`MARKETING_VERSION`, `CURRENT_PROJECT_VERSION` en `project.pbxproj`) **no** se bumpearon en este cambio — hacerlo recién al preparar el release de App Store (archive + upload).
 
 ### Eliminación de `@capacitor-mlkit/barcode-scanning`
 

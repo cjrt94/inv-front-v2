@@ -17,6 +17,21 @@
       </ion-refresher>
 
       <div class="page-container">
+        <!-- Date range shortcuts -->
+        <div class="date-shortcuts">
+          <ion-button
+            v-for="s in dateShortcuts"
+            :key="s.type"
+            size="small"
+            fill="outline"
+            class="date-shortcuts__btn"
+            :disabled="loading"
+            @click="applyShortcut(s.type)"
+          >
+            {{ s.label }}
+          </ion-button>
+        </div>
+
         <!-- Filters -->
         <div class="filters">
           <ion-list lines="none" class="filters__list">
@@ -100,6 +115,9 @@
           <!-- Sales chart -->
           <SalesChart :chart-data="salesByDay" />
 
+          <!-- Productos destacados (solo si hay productos marcados) -->
+          <FeaturedProducts :table="featuredTable" />
+
           <!-- Bottom grid: Top products + rankings -->
           <div class="dashboard-bottom-grid">
             <TopProductsList :items="topProducts" />
@@ -147,16 +165,20 @@ import KpiCard from '@/components/dashboard/KpiCard.vue'
 import SalesChart from '@/components/dashboard/SalesChart.vue'
 import RankingList from '@/components/dashboard/RankingList.vue'
 import TopProductsList from '@/components/dashboard/TopProductsList.vue'
+import FeaturedProducts from '@/components/dashboard/FeaturedProducts.vue'
 
 import {
   ESTABLISHMENTS,
   fetchSales,
   getDefaultDates,
+  DATE_SHORTCUTS,
+  getDateRangeShortcut,
   computeKpis,
   computeSalesByDay,
   computeTopProducts,
   computeSellers,
-  computeBrands
+  computeBrands,
+  computeFeaturedTable
 } from '@/services/salesService'
 import { fetchProducts } from '@/services/productService'
 import { useAuthStore } from '@/stores/auth'
@@ -201,6 +223,16 @@ function formatDate(dateStr) {
   return date.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+const dateShortcuts = DATE_SHORTCUTS
+
+function applyShortcut(type) {
+  const range = getDateRangeShortcut(type)
+  if (!range) return
+  startDate.value = range.start
+  endDate.value = range.end
+  loadData()
+}
+
 const loading = ref(false)
 const sales = ref([])
 const products = ref([])
@@ -222,6 +254,7 @@ const salesByDay = computed(() => computeSalesByDay(sales.value))
 const topProducts = computed(() => computeTopProducts(sales.value, products.value))
 const sellers = computed(() => computeSellers(sales.value))
 const brands = computed(() => computeBrands(sales.value, products.value))
+const featuredTable = computed(() => computeFeaturedTable(sales.value, products.value))
 
 async function loadData() {
   loading.value = true
@@ -259,6 +292,33 @@ onMounted(loadData)
 </script>
 
 <style lang="scss" scoped>
+.date-shortcuts {
+  display: flex;
+  gap: $space-8;
+  overflow-x: auto;
+  padding: $space-12 $space-16 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &__btn {
+    flex: 0 0 auto;
+    margin: 0;
+    white-space: nowrap;
+    --border-radius: #{$border-radius-lg};
+    --padding-start: 14px;
+    --padding-end: 14px;
+  }
+
+  @include respond-to(md) {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
+
 .filters {
   background: #ffffff;
   margin-bottom: $space-16;

@@ -34,6 +34,72 @@ export function getDefaultDates() {
   }
 }
 
+// YYYY-MM-DD a partir de los componentes LOCALES (evita el corrimiento de día
+// que produce toISOString al pasar a UTC en husos negativos como America/Lima).
+function toDateStr(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+// Atajos de rango de fecha del dashboard (réplica de imv-back setDateShortcut).
+// La semana arranca el lunes; `end = hoy` donde aplica (no hay ventas futuras).
+export const DATE_SHORTCUTS = [
+  { type: 'today', label: 'Hoy' },
+  { type: 'yesterday', label: 'Ayer' },
+  { type: 'thisWeek', label: 'Esta semana' },
+  { type: 'thisMonth', label: 'Este mes' },
+  { type: 'lastMonth', label: 'Mes pasado' },
+  { type: 'thisYear', label: 'Este año' }
+]
+
+export function getDateRangeShortcut(type) {
+  const now = new Date()
+  const y = now.getFullYear()
+  const mo = now.getMonth()
+  let start
+  let end
+
+  switch (type) {
+    case 'today':
+      start = new Date()
+      end = new Date()
+      break
+    case 'yesterday': {
+      const d = new Date()
+      d.setDate(d.getDate() - 1)
+      start = d
+      end = new Date(d)
+      break
+    }
+    case 'thisWeek': {
+      // getDay(): 0=domingo … 6=sábado. La semana inicia el lunes.
+      const day = now.getDay()
+      const sinceMonday = day === 0 ? 6 : day - 1
+      start = new Date(y, mo, now.getDate() - sinceMonday)
+      end = new Date()
+      break
+    }
+    case 'thisMonth':
+      start = new Date(y, mo, 1)
+      end = new Date()
+      break
+    case 'lastMonth':
+      start = new Date(y, mo - 1, 1)
+      end = new Date(y, mo, 0) // día 0 del mes actual = último día del mes anterior
+      break
+    case 'thisYear':
+      start = new Date(y, 0, 1)
+      end = new Date()
+      break
+    default:
+      return null
+  }
+
+  return { start: toDateStr(start), end: toDateStr(end) }
+}
+
 function withTimeout(promise, ms, label = 'operación') {
   return Promise.race([
     promise,
@@ -97,7 +163,9 @@ export function computeSalesByDay(sales) {
     .filter((s) => s.sunatDocumentType !== '07')
     .forEach((sale) => {
       const date = sale.issueDate?.toDate ? sale.issueDate.toDate() : new Date(sale.issueDate)
-      const key = date.toISOString().split('T')[0]
+      // Agrupar por día local (no UTC): Lima es UTC−5, así que toISOString empuja
+      // las ventas de la noche (>19:00) al día siguiente y aparecían barras fantasma.
+      const key = toDateStr(date)
       if (!dayMap[key]) dayMap[key] = 0
       dayMap[key] += sale.footer?.total || 0
     })
@@ -183,4 +251,55 @@ export function computeBrands(sales, products) {
   return Object.values(map)
     .sort((a, b) => b.total - a.total)
     .slice(0, 10)
+}
+
+// ── Productos destacados ─────────────────────────────────────────────
+// Réplica de la sección "Productos destacados" del dashboard de imv-back.
+// Se nutre de los productos con `featured === true` y de las ventas ya
+// cargadas por el filtro de fecha (no hace queries nuevas). Las NC (07) no
+// entran, igual que el resto de vistas por producto. Ingreso = precio con
+// IGV menos descuento, por cantidad (mismo cálculo que computeTopProducts).
+const IGV = 1.18
+
+function featuredLines(sales, featuredSkus) {
+  const lines = []
+  sales
+    .filter((s) => s.sunatDocumentType !== '07')
+    .forEach((sale) => {
+      const date = sale.issueDate?.toDate ? sale.issueDate.toDate() : new Date(sale.issueDate)
+      ;(sale.detail || []).forEach((item) => {
+        if (!item.sku || !featuredSkus.has(item.sku.toLowerCase())) return
+        const qty = item.quantity || 0
+        const revenue = (item.price * IGV - (item.discount?.value || 0) * IGV) * qty
+        lines.push({ sku: item.sku, name: item.name, quantity: qty, revenue, date })
+      })
+    })
+  return lines
+}
+
+export function computeFeaturedTable(sales, products) {
+  const featured = products.filter((p) => p.featured && p.sku)
+  if (!featured.length) return []
+
+  const featuredSkus = new Set(featured.map((p) => p.sku.toLowerCase()))
+  const agg = {}
+  featuredLines(sales, featuredSkus).forEach((l) => {
+    const key = l.sku.toLowerCase()
+    if (!agg[key]) agg[key] = { units: 0, revenue: 0 }
+    agg[key].units += l.quantity
+    agg[key].revenue += l.revenue
+  })
+
+  // Incluye destacados sin ventas en el período (en 0), tomándolos de `featured`.
+  return featured
+    .map((fp) => {
+      const a = agg[fp.sku.toLowerCase()] || { units: 0, revenue: 0 }
+      return {
+        sku: fp.sku,
+        name: fp.name || fp.sku,
+        units: a.units,
+        revenue: parseFloat(a.revenue.toFixed(2))
+      }
+    })
+    .sort((a, b) => b.revenue - a.revenue)
 }
