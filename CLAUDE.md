@@ -57,7 +57,7 @@ Paridad parcial con el dashboard de imv-back. Toda la lógica de cómputo vive e
 - **Atajos de rango de fecha** (`Index.vue` + `DATE_SHORTCUTS`/`getDateRangeShortcut` en el servicio): fila siempre visible arriba de los filtros — Hoy / Ayer / Esta semana / Este mes / Mes pasado / Este año. Un toque setea `startDate`/`endDate` (strings `YYYY-MM-DD`) y dispara `loadData()`. Misma lógica que imv-back (semana inicia lunes, `end = hoy` donde aplica). Scroll horizontal en móvil, wrap en md+.
 - **Fix de huso horario en el chart de ventas** (`computeSalesByDay`): antes agrupaba por día **UTC** (`toISOString()`), y como Lima es UTC−5 las ventas después de las ~19:00 caían al día siguiente → barras fantasma (p. ej. hoy 13 ya mostraba una barra en el "14"). Ahora agrupa por día **local** vía el helper `toDateStr` (componentes locales, no UTC), consistente con los atajos y con imv-back (que nunca tuvo el bug: ya usaba `getFullYear/getMonth/getDate`).
 
-> **Nota:** las versiones nativas de iOS (`MARKETING_VERSION`, `CURRENT_PROJECT_VERSION` en `project.pbxproj`) **no** se bumpearon en este cambio — hacerlo recién al preparar el release de App Store (archive + upload).
+> **Versiones:** `package.json` 4.1.0 → **4.2.0**; nativas iOS `MARKETING_VERSION` 4.1.0 → **4.2.0** y `CURRENT_PROJECT_VERSION` 15 → **16** (`project.pbxproj`, ambas en Debug + Release). Falta el release real: `npm run build && npx cap sync ios` + archive/upload desde Xcode.
 
 ### Eliminación de `@capacitor-mlkit/barcode-scanning`
 
@@ -215,6 +215,12 @@ Aumentado el padding vertical del toolbar del searchbar (`--padding-top` / `--pa
 ### Brand: "Imv." en lugar de "Inv."
 
 El nombre del producto es **Imv.** (con M). El path del repo `inv-front-v2` es legado. Corregido en `App.vue` (header del sidebar), `index.html` (title) y este archivo.
+
+### Versión 4.2.0 / build 16
+
+- `MARKETING_VERSION` 4.1.0 → 4.2.0 (en `ios/App/App.xcodeproj/project.pbxproj`, Debug + Release)
+- `CURRENT_PROJECT_VERSION` 15 → 16
+- `package.json` 4.1.0 → 4.2.0
 
 ### Versión 4.1.0 / build 15
 
