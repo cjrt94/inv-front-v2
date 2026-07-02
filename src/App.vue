@@ -35,6 +35,17 @@
               <ion-icon :icon="cubeOutline" slot="start" />
               <ion-label>Productos</ion-label>
             </ion-item>
+
+            <ion-item
+              button
+              router-link="/tabs/pedidos"
+              router-direction="root"
+              detail="false"
+              :class="{ 'item-active': isActive('/tabs/pedidos') }"
+            >
+              <ion-icon :icon="receiptOutline" slot="start" />
+              <ion-label>Pedidos</ion-label>
+            </ion-item>
           </ion-list>
         </ion-content>
 
@@ -74,12 +85,13 @@ import {
   IonContent, IonList, IonItem, IonIcon, IonLabel,
   IonFooter, IonButton
 } from '@ionic/vue'
-import { homeOutline, cubeOutline, logOutOutline } from 'ionicons/icons'
+import { homeOutline, cubeOutline, receiptOutline, logOutOutline } from 'ionicons/icons'
 import { StatusBar, Style } from '@capacitor/status-bar'
 import { Capacitor } from '@capacitor/core'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '@/firebase'
 import { registerPushNotifications, unregisterCurrentDeviceToken } from '@/services/notificationService'
+import { initVoucherSync } from '@/services/digitalOrdersService'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 
 const route = useRoute()
@@ -109,6 +121,9 @@ onMounted(async () => {
   if (Capacitor.isNativePlatform()) {
     await StatusBar.setStyle({ style: Style.Light })
   }
+
+  // Cola offline de vouchers de envío: sube lo pendiente al reconectar / volver a foreground.
+  initVoucherSync()
 
   onAuthStateChanged(auth, async (user) => {
     firebaseUser.value = user

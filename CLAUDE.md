@@ -49,6 +49,19 @@ npx cap sync ios
 
 ## Cambios realizados
 
+### Pedidos digitales + voucher de envío (v4.3.0)
+
+Vista **Pedidos** (Centro de Pedidos Digitales) — gestor de estados de los pedidos que entran de la tienda Kontento (colección `digitalOrders`, ver `DB.md` e `imv-functions`). La app **no factura** (eso es web-only en imv-pos); acá se ven y se gestionan.
+
+- **Ruta/nav**: `/tabs/pedidos` (`views/pedidos/Index.vue`), tab en iPhone (`Tabs.vue`) e ítem de menú en iPad (`App.vue`), icono `receiptOutline`.
+- **Listado**: `fetchDigitalOrders()` (getDocs `digitalOrders` orderBy `createdAt` desc, límite 100) + `ion-refresher` (mismo patrón que Products, sin `onSnapshot`). Filtro por `businessStatus` con `ion-segment`. Cards con cliente, fecha (agrupada local, no UTC), total, items y badges (sin resolver / divergencia / facturación).
+- **Detalle** (`PedidoInspector.vue`, `ion-modal`): cliente, items, totales, galería del voucher, y **cambio de estado** (Nuevo/Revisado/Entregado/Con problemas/Cancelado) validado contra `TRANSITIONS` + escribe `digitalOrders/{id}/history`. Colores/labels/transiciones en `services/orderStatus.js`.
+- **Voucher de envío del courier** (`@capacitor/camera`, `CameraSource.Prompt` = cámara o galería): captura en base64 → **cola offline en IndexedDB** (`services/voucherQueue.js`; no localStorage, que WKWebView bloquea) → sube a Firebase **Storage** (`digitalOrders/{id}/deliveryVouchers/{uuid}.jpg`) y hace `arrayUnion` en el doc. `initVoucherSync()` (en `App.vue`) reintenta el flush al reconectar (`@capacitor/network`) y al volver a foreground (`@capacitor/app`).
+- **Gate**: para marcar **Entregado** se exige ≥1 voucher (subido o pendiente en cola) — permite marcar sin señal, la subida se completa después.
+- **Deps nuevas**: `@capacitor/camera`, `@capacitor/network` → requieren `npm install` + `npx cap sync ios`. Info.plist: `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSPhotoLibraryAddUsageDescription`. Storage init en `firebase/index.js`; reglas en `imv-back/storage.rules` (`digitalOrders/*/deliveryVouchers`).
+
+> **Versiones:** `package.json` 4.2.0 → **4.3.0**; nativas iOS `MARKETING_VERSION` 4.2.0 → **4.3.0** y `CURRENT_PROJECT_VERSION` 16 → **17** (Debug + Release). Falta el release real: `npm install && npm run build && npx cap sync ios` + archive/upload desde Xcode.
+
 ### Dashboard: productos destacados, atajos de fecha y fix de huso horario (v4.2.0)
 
 Paridad parcial con el dashboard de imv-back. Toda la lógica de cómputo vive en `services/salesService.js` (funciones puras sobre las ventas ya cargadas — no hace queries nuevas); los componentes solo presentan.

@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { initializeFirestore, persistentLocalCache } from 'firebase/firestore'
 import { initializeAuth, indexedDBLocalPersistence } from 'firebase/auth'
+import { getStorage } from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyALKDjgHBtd4YWVM984rBcYuqv2Hdn_MlQ',
@@ -21,3 +22,5 @@ export const db = initializeFirestore(app, {
 export const auth = initializeAuth(app, {
   persistence: indexedDBLocalPersistence
 })
+// Storage para los vouchers de envío del courier (Centro de Pedidos Digitales).
+export const storage = getStorage(app)

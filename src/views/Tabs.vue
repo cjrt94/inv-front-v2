@@ -13,6 +13,11 @@
           <ion-icon :icon="cubeOutline" />
           <ion-label>Productos</ion-label>
         </ion-tab-button>
+
+        <ion-tab-button tab="pedidos" href="/tabs/pedidos">
+          <ion-icon :icon="receiptOutline" />
+          <ion-label>Pedidos</ion-label>
+        </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
   </ion-page>
@@ -23,5 +28,5 @@ import {
   IonPage, IonTabs, IonRouterOutlet,
   IonTabBar, IonTabButton, IonIcon, IonLabel
 } from '@ionic/vue'
-import { homeOutline, cubeOutline } from 'ionicons/icons'
+import { homeOutline, cubeOutline, receiptOutline } from 'ionicons/icons'
 </script>
