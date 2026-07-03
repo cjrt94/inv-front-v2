@@ -18,13 +18,13 @@
 
       <div class="page-container">
         <!-- Date range shortcuts -->
-        <div class="date-shortcuts">
+        <div class="chip-filter">
           <ion-button
             v-for="s in dateShortcuts"
             :key="s.type"
             size="small"
-            fill="outline"
-            class="date-shortcuts__btn"
+            :fill="activeShortcut === s.type ? 'solid' : 'outline'"
+            class="chip-filter__btn"
             :disabled="loading"
             @click="applyShortcut(s.type)"
           >
@@ -215,6 +215,8 @@ function onDateChange(ev) {
   } else {
     endDate.value = value
   }
+  // Al elegir una fecha manual ya no corresponde ningún atajo → desmarcar.
+  activeShortcut.value = ''
   showDatePicker.value = false
 }
 
@@ -224,10 +226,13 @@ function formatDate(dateStr) {
 }
 
 const dateShortcuts = DATE_SHORTCUTS
+// El rango por defecto es hoy (getDefaultDates), así que "Hoy" arranca activo.
+const activeShortcut = ref('today')
 
 function applyShortcut(type) {
   const range = getDateRangeShortcut(type)
   if (!range) return
+  activeShortcut.value = type
   startDate.value = range.start
   endDate.value = range.end
   loadData()
@@ -292,33 +297,6 @@ onMounted(loadData)
 </script>
 
 <style lang="scss" scoped>
-.date-shortcuts {
-  display: flex;
-  gap: $space-8;
-  overflow-x: auto;
-  padding: $space-12 $space-16 0;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  &__btn {
-    flex: 0 0 auto;
-    margin: 0;
-    white-space: nowrap;
-    --border-radius: #{$border-radius-lg};
-    --padding-start: 14px;
-    --padding-end: 14px;
-  }
-
-  @include respond-to(md) {
-    flex-wrap: wrap;
-    overflow-x: visible;
-  }
-}
-
 .filters {
   background: #ffffff;
   margin-bottom: $space-16;

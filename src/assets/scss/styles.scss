@@ -130,6 +130,59 @@ ion-modal.stock-modal {
   --border-radius: #{$border-radius};
 }
 
+// ── Status pills (Centro de Pedidos Digitales) ───────────────────────
+// Custom spans en vez de ion-badge/ion-chip: el reset global `* { padding:0 }`
+// pisa el padding del host de los componentes shadow-DOM de Ionic en WKWebView
+// y el texto se derrama del pill. Con spans propios controlamos padding y contraste.
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: $font-family;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.status-pill--primary { background: #{$primary}; color: #ffffff; }
+.status-pill--warning { background: #f0a500; color: #3d2a00; }
+.status-pill--success { background: #1e9e57; color: #ffffff; }
+.status-pill--danger  { background: #d8000c; color: #ffffff; }
+.status-pill--medium  { background: #ececec; color: #6b6b6b; }
+
+// ── Fila de chips de filtro ───────────────────────────────────────────
+// Estilo único compartido por el dashboard (atajos de fecha) y envíos
+// (filtro por estado). Pills outline scrollables en horizontal; el chip
+// activo se rellena (fill="solid"). Wrap en md+. Clase GLOBAL (no scoped)
+// para que ambas vistas queden idénticas.
+.chip-filter {
+  display: flex;
+  gap: $space-8;
+  overflow-x: auto;
+  padding: $space-12 $space-16;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+
+  &__btn {
+    flex: 0 0 auto;
+    margin: 0;
+    white-space: nowrap;
+    --border-radius: #{$border-radius-lg};
+    --padding-start: 14px;
+    --padding-end: 14px;
+  }
+
+  @include respond-to(md) {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
+
 .ranking-list {
   @include card;
   margin: 0 $space-16 $space-16;

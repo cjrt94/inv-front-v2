@@ -49,6 +49,18 @@ npx cap sync ios
 
 ## Cambios realizados
 
+### Pulido de UX de Pedidos digitales + colores semánticos (v4.3.1)
+
+Iteración de UX sobre el módulo Pedidos (mismo release, aún sin publicar). No cambia comportamiento ni datos; el grueso es presentación.
+
+- **Filtro por estado**: se dejó el `ion-segment` por una fila de chips `ion-button` con la **clase global compartida `.chip-filter`** (`styles.scss`), idéntica a los atajos de fecha del dashboard (que ahora también la usan). El dashboard marca "Hoy" activo por defecto (`activeShortcut`) y lo desmarca al elegir fecha manual.
+- **`.status-pill`** (utilidad global): reemplaza `ion-badge`/`ion-chip` para los estados. El reset global `* { padding: 0 }` pisaba el padding del host de esos componentes shadow-DOM en WKWebView y el texto se derramaba; con spans propios se controla padding y contraste.
+- **Detalle** (`PedidoInspector.vue`): modal **full-screen en iPhone** (antes sheet que dejaba ver el header del listado); cliente reestructurado en identidad (nombre + documento `docType·docNumber`) + pares etiqueta/valor + nota como callout; total destacado; **botones de acción** de ancho completo con verbo + ícono ("Marcar como…", "Cancelar pedido"), ordenados por `ACTION_ORDER` (destructivo al final); padding-bottom con safe-area.
+- **Colores semánticos** (`_config.scss`): se definieron `success`/`warning`/`danger` (con -rgb/-contrast/-shade/-tint) para que botones, pills y toasts usen la paleta de marca y no el neón por defecto de Ionic.
+- **Nativo**: `pod install` (CocoaPods 1.16.2) integró los pods `CapacitorCamera`/`CapacitorNetwork` que faltaban — el botón de voucher fallaba con *"not implemented"* hasta esto.
+
+> **Versiones:** `package.json` 4.3.0 → **4.3.1**; nativas iOS `MARKETING_VERSION` 4.3.0 → **4.3.1** y `CURRENT_PROJECT_VERSION` 17 → **18** (Debug + Release). Falta el release real: `npm run build && npx cap sync ios` + archive/upload desde Xcode.
+
 ### Pedidos digitales + voucher de envío (v4.3.0)
 
 Vista **Pedidos** (Centro de Pedidos Digitales) — gestor de estados de los pedidos que entran de la tienda Kontento (colección `digitalOrders`, ver `DB.md` e `imv-functions`). La app **no factura** (eso es web-only en imv-pos); acá se ven y se gestionan.

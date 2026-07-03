@@ -12,13 +12,26 @@
       </ion-refresher>
 
       <div class="page-container">
-        <div class="filter-wrapper">
-          <ion-segment v-model="statusFilter" scrollable @ionChange="() => {}">
-            <ion-segment-button value="all"><ion-label>Todos</ion-label></ion-segment-button>
-            <ion-segment-button v-for="s in statuses" :key="s" :value="s">
-              <ion-label>{{ businessLabel(s) }}</ion-label>
-            </ion-segment-button>
-          </ion-segment>
+        <!-- Filtro por estado — misma clase global que los atajos de fecha del dashboard -->
+        <div class="chip-filter">
+          <ion-button
+            size="small"
+            :fill="statusFilter === 'all' ? 'solid' : 'outline'"
+            class="chip-filter__btn"
+            @click="statusFilter = 'all'"
+          >
+            Todos
+          </ion-button>
+          <ion-button
+            v-for="s in statuses"
+            :key="s"
+            size="small"
+            :fill="statusFilter === s ? 'solid' : 'outline'"
+            class="chip-filter__btn"
+            @click="statusFilter = s"
+          >
+            {{ businessLabel(s) }}
+          </ion-button>
         </div>
 
         <template v-if="loading">
@@ -40,9 +53,9 @@
             >
               <div class="order-head">
                 <span class="order-customer">{{ (order.customer && order.customer.name) || 'Cliente' }}</span>
-                <ion-chip :color="businessColor(order.businessStatus)" class="status-chip">
+                <span class="status-pill" :class="'status-pill--' + businessColor(order.businessStatus)">
                   {{ businessLabel(order.businessStatus) }}
-                </ion-chip>
+                </span>
               </div>
               <div class="order-meta">
                 <span>{{ formatDate(order.createdAt) }}</span>
@@ -50,11 +63,13 @@
                 <span class="order-total">{{ money(order.footer && order.footer.total, order.currency) }}</span>
               </div>
               <div class="order-flags">
-                <ion-badge v-if="order.unresolvedSkus && order.unresolvedSkus.length" color="danger">
+                <span v-if="order.unresolvedSkus && order.unresolvedSkus.length" class="status-pill status-pill--danger">
                   {{ order.unresolvedSkus.length }} sin resolver
-                </ion-badge>
-                <ion-badge v-if="order.divergence" color="danger">Divergencia</ion-badge>
-                <ion-badge :color="invoiceColor(order.invoiceStatus)">{{ invoiceLabel(order.invoiceStatus) }}</ion-badge>
+                </span>
+                <span v-if="order.divergence" class="status-pill status-pill--danger">Divergencia</span>
+                <span class="status-pill" :class="'status-pill--' + invoiceColor(order.invoiceStatus)">
+                  {{ invoiceLabel(order.invoiceStatus) }}
+                </span>
               </div>
             </div>
           </div>
@@ -87,7 +102,7 @@ import { ref, computed, onMounted } from 'vue'
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonRefresher, IonRefresherContent, IonModal, IonSkeletonText,
-  IonSegment, IonSegmentButton, IonLabel, IonChip, IonBadge, IonIcon,
+  IonButton, IonIcon,
   toastController
 } from '@ionic/vue'
 import { receiptOutline } from 'ionicons/icons'
@@ -99,10 +114,10 @@ import {
 import { useBreakpoint } from '@/composables/useBreakpoint'
 
 const isLargeScreen = useBreakpoint('(min-width: 768px)')
+// iPad: modal centrado; iPhone: full-screen (evita que se vean el header/segment
+// del listado por detrás del sheet → doble-header confuso).
 const modalProps = computed(() =>
-  isLargeScreen.value
-    ? { class: 'stock-modal' }
-    : { initialBreakpoint: 0.92, breakpoints: [0, 0.5, 0.92] }
+  isLargeScreen.value ? { class: 'stock-modal' } : {}
 )
 
 const statuses = Object.keys(BUSINESS_LABELS)
@@ -160,11 +175,7 @@ onMounted(loadOrders)
 </script>
 
 <style lang="scss" scoped>
-.filter-wrapper {
-  padding: 8px 8px 4px;
-  background: #ffffff;
-  @include respond-to(md) { background: transparent; }
-}
+// `.chip-filter` es global (styles.scss) — compartido con el dashboard.
 
 .orders-list {
   padding: $space-8 $space-12;
@@ -199,7 +210,7 @@ onMounted(loadOrders)
   text-overflow: ellipsis;
 }
 
-.status-chip { flex-shrink: 0; }
+.order-head .status-pill { flex-shrink: 0; }
 
 .order-meta {
   display: flex;

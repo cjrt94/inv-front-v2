@@ -14,6 +14,29 @@
   --ion-color-secondary-shade: #629886;
   --ion-color-secondary-tint: #7eb6a2;
 
+  // Colores semánticos — alineados con los .status-pill de Pedidos digitales,
+  // así botones, pills y toasts comparten la misma paleta (no el neón de Ionic).
+  --ion-color-success: #1e9e57;
+  --ion-color-success-rgb: 30, 158, 87;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #1a8b4d;
+  --ion-color-success-tint: #35a868;
+
+  --ion-color-warning: #f0a500;
+  --ion-color-warning-rgb: 240, 165, 0;
+  --ion-color-warning-contrast: #3d2a00;
+  --ion-color-warning-contrast-rgb: 61, 42, 0;
+  --ion-color-warning-shade: #d39400;
+  --ion-color-warning-tint: #f2ae1a;
+
+  --ion-color-danger: #d8000c;
+  --ion-color-danger-rgb: 216, 0, 12;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #be000b;
+  --ion-color-danger-tint: #dc1a25;
+
   --ion-font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
   --ion-background-color: #f5f7f9;
   --ion-toolbar-background: #b51a3e;
