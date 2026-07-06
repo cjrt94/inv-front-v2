@@ -88,14 +88,16 @@ import {
 import { homeOutline, cubeOutline, receiptOutline, logOutOutline } from 'ionicons/icons'
 import { StatusBar, Style } from '@capacitor/status-bar'
 import { Capacitor } from '@capacitor/core'
-import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/firebase'
-import { registerPushNotifications, unregisterCurrentDeviceToken } from '@/services/notificationService'
+import { registerPushNotifications } from '@/services/notificationService'
 import { initVoucherSync } from '@/services/digitalOrdersService'
 import { useBreakpoint } from '@/composables/useBreakpoint'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const isLargeScreen = useBreakpoint('(min-width: 768px)')
 
 const firebaseUser = ref(auth.currentUser)
@@ -112,8 +114,7 @@ const initial = computed(
 )
 
 async function logout() {
-  await unregisterCurrentDeviceToken()
-  await signOut(auth)
+  await authStore.logout()
   router.replace('/login')
 }
 
@@ -130,11 +131,7 @@ onMounted(async () => {
     if (user) {
       try {
         const token = await user.getIdTokenResult()
-        userRole.value = token.claims.admin
-          ? 'admin'
-          : token.claims.editor
-            ? 'editor'
-            : null
+        userRole.value = token.claims.admin ? 'admin' : null
       } catch {
         userRole.value = null
       }

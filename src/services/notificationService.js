@@ -1,5 +1,6 @@
 import { PushNotifications } from '@capacitor/push-notifications'
 import { Capacitor } from '@capacitor/core'
+import router from '@/router'
 import { db, auth } from '@/firebase'
 import {
   collection, query, where, getDocs, doc, updateDoc,
@@ -67,6 +68,15 @@ export async function registerPushNotifications() {
 
     await PushNotifications.addListener('registrationError', (error) => {
       console.error('[Push] Registration error:', error)
+    })
+
+    // Navegar al tocar la notificación. El backend aún no envía `data` de ruteo;
+    // cuando lo haga (route/type/orderId) se usa. Hoy: los pedidos digitales van
+    // al tab de pedidos; el resto solo trae la app a foreground.
+    await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+      const data = action?.notification?.data || {}
+      const target = data.route || (data.type === 'digitalOrder' ? '/tabs/pedidos' : null)
+      if (target) router.push(target).catch(() => {})
     })
   }
 

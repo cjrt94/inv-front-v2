@@ -24,6 +24,12 @@
         <ion-spinner name="crescent" />
       </div>
 
+      <!-- Error -->
+      <div v-else-if="error" class="empty-state">
+        <ion-icon :icon="peopleOutline" />
+        <p>No se pudieron cargar los competidores. Cerrá y volvé a abrir.</p>
+      </div>
+
       <!-- No competitors -->
       <div v-else-if="!competitors.length" class="empty-state">
         <ion-icon :icon="peopleOutline" />
@@ -102,6 +108,7 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const loading = ref(false)
+const error = ref(false)
 const competitors = ref([])
 const selectedName = ref(null)
 
@@ -176,7 +183,9 @@ const chartOptions = computed(() => ({
   },
   tooltip: {
     custom: ({ dataPointIndex }) => {
-      const name = fullNames.value[dataPointIndex]
+      // name proviene de products/{id}/competitors (colección de datos externos):
+      // escapar antes de inyectar por innerHTML para evitar XSS almacenado.
+      const name = escapeHtml(fullNames.value[dataPointIndex])
       const val = series.value[0].data[dataPointIndex]
       return `<div style="padding:8px 12px;font-family:Poppins,sans-serif;font-size:12px;line-height:1.6"><b>${name}</b><br/>S/ ${Number(val).toFixed(2)}</div>`
     }
@@ -189,6 +198,12 @@ const chartOptions = computed(() => ({
   },
   grid: { borderColor: '#ebebeb' }
 }))
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ))
+}
 
 function formatCurrency(val) {
   if (val == null) return 'S/ —'
@@ -209,8 +224,12 @@ function diffClass(competitorPrice) {
 
 onMounted(async () => {
   loading.value = true
+  error.value = false
   try {
     competitors.value = await fetchCompetitors(props.product.id)
+  } catch (e) {
+    error.value = true
+    console.error('[CompetitorInspector] error al cargar competidores:', e)
   } finally {
     loading.value = false
   }

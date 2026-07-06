@@ -1,5 +1,5 @@
 <template>
-  <div class="product-card" @click="emit('click')">
+  <div class="product-card">
     <div class="product-card__header">
       <span class="product-card__name">{{ product.name }}</span>
       <span class="product-card__sku">{{ product.sku }}</span>
@@ -36,7 +36,7 @@ defineProps({
   product: { type: Object, required: true }
 })
 
-const emit = defineEmits(['click', 'open-competitors', 'open-stocks'])
+const emit = defineEmits(['open-competitors', 'open-stocks'])
 
 function formatCurrency(val) {
   if (val == null) return 'S/ —'

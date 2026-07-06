@@ -28,9 +28,11 @@ function todayEnd() {
 }
 
 export function getDefaultDates() {
+  // toDateStr (componentes locales) en vez de toISOString: en Lima (UTC−5) el ISO
+  // empujaba el "Hasta" al día siguiente. Consistente con getDateRangeShortcut.
   return {
-    start: todayStart().toISOString().split('T')[0],
-    end: todayEnd().toISOString().split('T')[0]
+    start: toDateStr(todayStart()),
+    end: toDateStr(todayEnd())
   }
 }
 

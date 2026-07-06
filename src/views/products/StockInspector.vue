@@ -22,6 +22,11 @@
         <ion-spinner name="crescent" />
       </div>
 
+      <div v-else-if="error" class="empty-state">
+        <ion-icon :icon="storefrontOutline" />
+        <p>No se pudo cargar el stock. Cerrá y volvé a abrir.</p>
+      </div>
+
       <div v-else-if="!stocks.length" class="empty-state">
         <ion-icon :icon="storefrontOutline" />
         <p>Sin stock registrado en ninguna tienda</p>
@@ -68,6 +73,7 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const loading = ref(false)
+const error = ref(false)
 const stocks = ref([])
 
 const sortedStocks = computed(() =>
@@ -87,8 +93,12 @@ function qtyClass(qty) {
 
 onMounted(async () => {
   loading.value = true
+  error.value = false
   try {
     stocks.value = await fetchProductStocks(props.product.id)
+  } catch (e) {
+    error.value = true
+    console.error('[StockInspector] error al cargar stock:', e)
   } finally {
     loading.value = false
   }

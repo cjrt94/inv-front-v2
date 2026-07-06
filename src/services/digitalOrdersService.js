@@ -5,14 +5,15 @@
 import { db, storage, auth } from '@/firebase'
 import {
   collection, query, orderBy, limit, getDocs, getDoc,
-  doc, updateDoc, addDoc, arrayUnion, serverTimestamp
+  doc, updateDoc, arrayUnion, serverTimestamp, runTransaction
 } from 'firebase/firestore'
 import { ref as storageRef, uploadString, getDownloadURL } from 'firebase/storage'
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { Network } from '@capacitor/network'
 import { App } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
-import { enqueue, allPending, remove, pendingCount } from './voucherQueue'
+import { enqueue, allPending, remove, pendingCount, bumpAttempts } from './voucherQueue'
+import { TRANSITIONS } from './orderStatus'
 
 const COLLECTION = 'digitalOrders'
 
@@ -32,13 +33,27 @@ export async function fetchOrder (orderId) {
   return s.exists() ? { id: s.id, ...s.data() } : null
 }
 
-// Cambio de estado de negocio + entrada de historial (batch lógico: update + add).
+// Cambio de estado de negocio + entrada de historial, atómico y validado.
+// runTransaction relee el estado actual (el listado es getDocs one-shot y `from`
+// puede venir stale), valida la transición contra TRANSITIONS, y escribe estado +
+// history juntos. Lanza si el pedido no existe, si su estado cambió desde la lectura,
+// o si la transición es inválida — el caller muestra el mensaje.
 export async function updateBusinessStatus (orderId, from, to) {
   const by = currentUser()
-  const ref = doc(db, COLLECTION, orderId)
-  await updateDoc(ref, { businessStatus: to, updatedAt: serverTimestamp(), lastUser: by })
-  await addDoc(collection(db, COLLECTION, orderId, 'history'), {
-    from, to, at: serverTimestamp(), by, note: ''
+  const orderRef = doc(db, COLLECTION, orderId)
+  const historyRef = doc(collection(db, COLLECTION, orderId, 'history'))
+  await runTransaction(db, async (trx) => {
+    const snap = await trx.get(orderRef)
+    if (!snap.exists()) throw new Error('El pedido ya no existe.')
+    const current = snap.data().businessStatus
+    if (current !== from) {
+      throw new Error('El estado del pedido cambió; recargá e intentá de nuevo.')
+    }
+    if (!(TRANSITIONS[current] || []).includes(to)) {
+      throw new Error(`Transición inválida: ${current} → ${to}.`)
+    }
+    trx.update(orderRef, { businessStatus: to, updatedAt: serverTimestamp(), lastUser: by })
+    trx.set(historyRef, { from, to, at: serverTimestamp(), by, note: '' })
   })
 }
 
@@ -62,21 +77,30 @@ async function uploadEntry (entry) {
   return { url, storagePath: path }
 }
 
-// Intenta subir todo lo pendiente. Devuelve cuántos subió. Silencioso ante fallos
-// (se reintenta en el próximo flush: reconexión / app en foreground).
+const MAX_VOUCHER_ATTEMPTS = 5
+
+// Intenta subir todo lo pendiente. Devuelve { uploaded, discarded }. Ante fallo
+// incrementa el contador de intentos de la entrada; tras MAX_VOUCHER_ATTEMPTS la
+// descarta (evita el reintento infinito que re-subía la foto completa en cada flush).
 export async function flushVoucherQueue () {
   let uploaded = 0
+  const discarded = []
   let items = []
-  try { items = await allPending() } catch (e) { return 0 }
+  try { items = await allPending() } catch (e) { return { uploaded, discarded } }
   for (const entry of items) {
     try {
       await uploadEntry(entry)
       uploaded++
     } catch (e) {
-      // dejar en cola para el próximo intento
+      const attempts = await bumpAttempts(entry.id).catch(() => 0)
+      if (attempts >= MAX_VOUCHER_ATTEMPTS) {
+        await remove(entry.id).catch(() => {})
+        discarded.push(entry.orderId)
+        console.warn(`[voucherQueue] entrada descartada tras ${attempts} intentos:`, entry.id)
+      }
     }
   }
-  return uploaded
+  return { uploaded, discarded }
 }
 
 // Captura una foto (cámara o galería) y la encola; intenta subir de una.
@@ -98,7 +122,7 @@ export async function captureVoucher (orderId) {
     capturedBy: currentUser(),
     capturedAt: new Date().toISOString()
   })
-  const uploaded = await flushVoucherQueue()
+  const { uploaded } = await flushVoucherQueue()
   const after = await pendingCount(orderId)
   return { queued: true, uploadedNow: uploaded > 0 && after <= before }
 }

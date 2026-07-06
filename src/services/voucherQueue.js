@@ -65,3 +65,22 @@ export async function remove (id) {
     req.onerror = () => reject(req.error)
   })
 }
+
+// Incrementa el contador de intentos de una entrada y devuelve el nuevo total.
+// Usado por flushVoucherQueue para descartar entradas que fallan repetidamente.
+export async function bumpAttempts (id) {
+  const db = await openDb()
+  return new Promise((resolve, reject) => {
+    const store = tx(db, 'readwrite')
+    const getReq = store.get(id)
+    getReq.onsuccess = () => {
+      const rec = getReq.result
+      if (!rec) { resolve(0); return }
+      rec.attempts = (rec.attempts || 0) + 1
+      const putReq = store.put(rec)
+      putReq.onsuccess = () => resolve(rec.attempts)
+      putReq.onerror = () => reject(putReq.error)
+    }
+    getReq.onerror = () => reject(getReq.error)
+  })
+}

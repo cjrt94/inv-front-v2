@@ -228,7 +228,9 @@ async function refresh () {
     const fresh = await fetchOrder(o.value.id)
     if (fresh) o.value = fresh
     pending.value = await orderPendingVouchers(o.value.id)
-  } catch (e) { /* noop */ }
+  } catch (e) {
+    console.warn('[PedidoInspector] refresh falló:', e)
+  }
 }
 
 async function onCapture () {
@@ -265,7 +267,7 @@ async function onChangeStatus (to) {
     emit('updated', { id: o.value.id, businessStatus: to })
     await toast('Estado actualizado.', 'success')
   } catch (e) {
-    await toast('No se pudo actualizar el estado.', 'danger')
+    await toast((e && e.message) || 'No se pudo actualizar el estado.', 'danger')
   } finally {
     saving.value = false
   }

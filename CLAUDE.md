@@ -49,6 +49,19 @@ npx cap sync ios
 
 ## Cambios realizados
 
+### Endurecimiento de seguridad + correcciones de auditoría (v4.4.0)
+
+Batch derivado de la auditoría 2026-07-06. Un solo release iOS. Antes de planear se verificó cada hallazgo contra el código (varios de la auditoría estaban desactualizados: el cleanup de tokens FCM ya existía; `init()` sí era código muerto pese a lo que decía este archivo).
+
+- **Seguridad**: escape del nombre de competidor en el tooltip de ApexCharts (`CompetitorInspector.vue`) — el dato viene de `products/{id}/competitors` (datos externos scrapeados); **CSP acotada** a Firebase/Firestore/Storage/FCM en `index.html` (antes `default-src *`). Compañera en `imv-back/firestore.rules` (deployada): `competitors`/`price_history` con `write: if false` (solo el scraper escribe vía Admin SDK; lectura sigue pública para splotter), y collection-group `movements`/`stocks` `list` solo `admin`.
+- **App admin-only**: `stores/auth.js` requiere claim `admin` (se quitó `editor`, que no es asignable en el sistema); `App.vue` alineado (`userRole`). Ver memoria `users_role_shape`.
+- **Pedidos digitales**: `updateBusinessStatus` usa `runTransaction` — relee el estado (el listado es `getDocs` one-shot y `from` puede venir stale), valida la transición contra `TRANSITIONS` y escribe estado + `history` atómicamente. La cola de vouchers (`voucherQueue.js` → `bumpAttempts`) descarta entradas tras 5 intentos fallidos (evita el reintento infinito que re-subía la foto completa en cada flush).
+- **Fechas**: `getDefaultDates` usa `toDateStr` (fix del "Hasta" que arrancaba en mañana por `toISOString` en UTC−5).
+- **Errores**: `catch` real en los `onMounted` de `CompetitorInspector`/`StockInspector` (estado de error distinguible del vacío legítimo); `refresh()` de `PedidoInspector` loguea en vez de tragar. `notificationService` registra `pushNotificationActionPerformed` para navegar al tocar la push (lee `data.route`/`data.type`; **falta que el backend `createNotification` envíe un `data` payload** para rutear a destinos específicos — hoy solo `type:'digitalOrder'` → tab pedidos).
+- **Limpieza**: eliminados `authStore.init()`/`isLoggedIn`/`loading` (código muerto — `main.js` no los usa), `fetchProductsBySkus`, el `@click` sin listener de `ProductCard`, y el `<link rel="manifest">` inexistente. Logout unificado vía `authStore.logout()`. `@capacitor/haptics`/`keyboard` se **dejaron** (Ionic los usa en runtime, no son código muerto pese a no importarse).
+
+> **Versiones:** `package.json` 4.3.1 → **4.4.0**; nativas `MARKETING_VERSION` 4.3.1 → **4.4.0** y `CURRENT_PROJECT_VERSION` 18 → **19** (Debug + Release). Falta el release real: `npm run build && npx cap sync ios` + archive/upload desde Xcode. **Verificar on-device la CSP nueva** (login, carga de datos, subida de voucher, push) antes de publicar.
+
 ### Pulido de UX de Pedidos digitales + colores semánticos (v4.3.1)
 
 Iteración de UX sobre el módulo Pedidos (mismo release, aún sin publicar). No cambia comportamiento ni datos; el grueso es presentación.

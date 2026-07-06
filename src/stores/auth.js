@@ -2,26 +2,23 @@ import { defineStore } from 'pinia'
 import { auth } from '@/firebase'
 import {
   signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
+  signOut
 } from 'firebase/auth'
 import { unregisterCurrentDeviceToken } from '@/services/notificationService'
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null,
-    loading: true
+    user: null
   }),
-
-  getters: {
-    isLoggedIn: (state) => !!state.user
-  },
 
   actions: {
     async login(email, password) {
       const { user } = await signInWithEmailAndPassword(auth, email, password)
       const token = await user.getIdTokenResult()
 
-      if (!token.claims.admin && !token.claims.editor) {
+      // La app es admin-only: todas las reglas de Firestore exigen claim `admin`.
+      // (El rol `editor` no es asignable en el sistema; ver imv-back.)
+      if (!token.claims.admin) {
         await signOut(auth)
         throw new Error('Permisos insuficientes')
       }
@@ -30,7 +27,7 @@ export const useAuthStore = defineStore('auth', {
         uid: user.uid,
         email: user.email,
         displayName: user.displayName,
-        role: token.claims.admin ? 'admin' : 'editor'
+        role: 'admin'
       }
     },
 
@@ -38,35 +35,6 @@ export const useAuthStore = defineStore('auth', {
       await unregisterCurrentDeviceToken()
       await signOut(auth)
       this.user = null
-    },
-
-    init() {
-      return new Promise((resolve) => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-          unsubscribe()
-          if (firebaseUser) {
-            try {
-              const token = await firebaseUser.getIdTokenResult()
-              if (token.claims.admin || token.claims.editor) {
-                this.user = {
-                  uid: firebaseUser.uid,
-                  email: firebaseUser.email,
-                  displayName: firebaseUser.displayName,
-                  role: token.claims.admin ? 'admin' : 'editor'
-                }
-              } else {
-                this.user = null
-              }
-            } catch {
-              this.user = null
-            }
-          } else {
-            this.user = null
-          }
-          this.loading = false
-          resolve()
-        })
-      })
     }
   }
 })
