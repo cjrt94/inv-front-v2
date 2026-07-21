@@ -49,6 +49,12 @@ npx cap sync ios
 
 ## Cambios realizados
 
+### Voucher de envío opcional (v4.4.1)
+
+Se eliminó el gate que exigía ≥1 foto del voucher de envío para marcar un pedido como **Entregado** (`PedidoInspector.vue`: check en `onChangeStatus`, computed `hasAnyVoucher`/`needsVoucherHint` y hints de obligatoriedad). La captura/subida del voucher sigue funcionando igual, ahora como paso opcional. Cambio espejo en imv-back v2.13.1 (mismo release del gate web).
+
+> **Versiones:** `package.json` 4.4.0 → **4.4.1**; nativas `MARKETING_VERSION` → **4.4.1** y `CURRENT_PROJECT_VERSION` 19 → **20** (Debug + Release). Falta el release real: `npm run build && npx cap sync ios` + archive/upload desde Xcode (acumula lo pendiente de v4.4.0).
+
 ### Endurecimiento de seguridad + correcciones de auditoría (v4.4.0)
 
 Batch derivado de la auditoría 2026-07-06. Un solo release iOS. Antes de planear se verificó cada hallazgo contra el código (varios de la auditoría estaban desactualizados: el cleanup de tokens FCM ya existía; `init()` sí era código muerto pese a lo que decía este archivo).

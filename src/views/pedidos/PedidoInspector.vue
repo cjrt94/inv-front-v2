@@ -97,7 +97,7 @@
           {{ capturing ? 'Procesando…' : 'Adjuntar voucher de envío' }}
         </ion-button>
         <p v-if="!vouchers.length && pending === 0" class="do-hint">
-          Todavía no hay voucher. Es obligatorio adjuntar al menos uno para marcar "Entregado".
+          Todavía no hay voucher de envío.
         </p>
       </section>
 
@@ -119,9 +119,6 @@
           </ion-button>
           <p v-if="!allowedTransitions.length" class="do-hint">No hay acciones disponibles para este estado.</p>
         </div>
-        <p v-if="needsVoucherHint" class="do-hint do-hint--danger">
-          Para marcar "Entregado" necesitás adjuntar al menos una foto del voucher.
-        </p>
       </section>
     </div>
   </ion-content>
@@ -164,8 +161,6 @@ const allowedTransitions = computed(() =>
   [...(TRANSITIONS[o.value.businessStatus] || [])]
     .sort((a, b) => (ACTION_ORDER[a] || 99) - (ACTION_ORDER[b] || 99))
 )
-const hasAnyVoucher = computed(() => vouchers.value.length + pending.value > 0)
-const needsVoucherHint = computed(() => allowedTransitions.value.includes('delivered') && !hasAnyVoucher.value)
 
 // Botones de acción: verbo + ícono para que se lean como acción, no como estado.
 const ACTION_LABELS = {
@@ -256,10 +251,6 @@ async function onCapture () {
 async function onChangeStatus (to) {
   const from = o.value.businessStatus
   if (to === from) return
-  if (to === 'delivered' && !hasAnyVoucher.value) {
-    await toast('Falta el voucher de envío para marcar Entregado.', 'warning')
-    return
-  }
   saving.value = true
   try {
     await updateBusinessStatus(o.value.id, from, to)
