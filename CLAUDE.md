@@ -1,13 +1,14 @@
 # Imv. — Panel de Administración
 
-Aplicación móvil iOS para administración de inventario y ventas, construida con Vue 3 + Ionic + Capacitor + Firebase.
+Aplicación móvil iOS para administración de inventario, ventas y pedidos digitales (tres tabs: Dashboard, Productos, Pedidos), construida con Vue 3 + Ionic + Capacitor + Firebase.
 
 ## Stack
 
 - **Vue 3** + Composition API
 - **Ionic Vue 8** (modo iOS)
 - **Capacitor 6** (iOS nativo)
-- **Firebase 12** (Auth + Firestore)
+- **Firebase 12** (Auth + Firestore + Storage — vouchers, `src/firebase/index.js`)
+- **Push FCM** vía `@capacitor/push-notifications` (registro de tokens en `users`)
 - **Pinia** (estado global)
 - **ApexCharts** (gráficas)
 - **Vite 5** (bundler)
@@ -20,14 +21,18 @@ src/
 ├── components/
 │   ├── dashboard/       # KpiCard, SalesChart, RankingList, TopProductsList, FeaturedProducts
 │   └── products/        # ProductCard
-├── firebase/            # Inicialización de Firebase
+├── composables/         # useBreakpoint (media queries reactivas)
+├── firebase/            # Inicialización de Firebase (Auth + Firestore + Storage)
 ├── router/              # Vue Router con guards de autenticación
-├── services/            # productService, salesService
+├── services/            # productService, salesService, digitalOrdersService,
+│                        # orderStatus, voucherQueue, notificationService
 ├── stores/              # Pinia store (auth)
 └── views/
     ├── dashboard/       # Vista principal con KPIs y gráficas
-    ├── products/        # Lista de productos + CompetitorInspector
-    └── Login.vue
+    ├── products/        # Lista de productos + CompetitorInspector + StockInspector
+    ├── pedidos/         # Centro de Pedidos Digitales (Index + PedidoInspector)
+    ├── Login.vue
+    └── Tabs.vue         # Tab bar iPhone: Dashboard / Productos / Pedidos
 ```
 
 ## Desarrollo
@@ -87,7 +92,7 @@ Vista **Pedidos** (Centro de Pedidos Digitales) — gestor de estados de los ped
 - **Ruta/nav**: `/tabs/pedidos` (`views/pedidos/Index.vue`), tab en iPhone (`Tabs.vue`) e ítem de menú en iPad (`App.vue`), icono `receiptOutline`.
 - **Listado**: `fetchDigitalOrders()` (getDocs `digitalOrders` orderBy `createdAt` desc, límite 100) + `ion-refresher` (mismo patrón que Products, sin `onSnapshot`). Filtro por `businessStatus` con `ion-segment`. Cards con cliente, fecha (agrupada local, no UTC), total, items y badges (sin resolver / divergencia / facturación).
 - **Detalle** (`PedidoInspector.vue`, `ion-modal`): cliente, items, totales, galería del voucher, y **cambio de estado** (Nuevo/Revisado/Entregado/Con problemas/Cancelado) validado contra `TRANSITIONS` + escribe `digitalOrders/{id}/history`. Colores/labels/transiciones en `services/orderStatus.js`.
-- **Voucher de envío del courier** (`@capacitor/camera`, `CameraSource.Prompt` = cámara o galería): captura en base64 → **cola offline en IndexedDB** (`services/voucherQueue.js`; no localStorage, que WKWebView bloquea) → sube a Firebase **Storage** (`digitalOrders/{id}/deliveryVouchers/{uuid}.jpg`) y hace `arrayUnion` en el doc. `initVoucherSync()` (en `App.vue`) reintenta el flush al reconectar (`@capacitor/network`) y al volver a foreground (`@capacitor/app`).
+- **Voucher de envío del courier** (`@capacitor/camera`, `CameraSource.Prompt` = cámara o galería): captura en base64 → **cola offline en IndexedDB** (`services/voucherQueue.js`; no localStorage, que WKWebView bloquea) → sube a Firebase **Storage** (`digitalOrders/{id}/deliveryVouchers/{uuid}.{format}`, con `format` el de la foto, default `jpeg`) y hace `arrayUnion` en el doc. `initVoucherSync()` (en `App.vue`) reintenta el flush al reconectar (`@capacitor/network`) y al volver a foreground (`@capacitor/app`).
 - **Gate**: para marcar **Entregado** se exige ≥1 voucher (subido o pendiente en cola) — permite marcar sin señal, la subida se completa después.
 - **Deps nuevas**: `@capacitor/camera`, `@capacitor/network` → requieren `npm install` + `npx cap sync ios`. Info.plist: `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSPhotoLibraryAddUsageDescription`. Storage init en `firebase/index.js`; reglas en `imv-back/storage.rules` (`digitalOrders/*/deliveryVouchers`).
 
@@ -132,9 +137,10 @@ El entry point bajó de **2.1 MB → 3.5 KB**. Los vendors se cargan en paralelo
 
 **Causa:** `main.js` esperaba `router.isReady()` antes de montar Vue. El router guard llamaba `authStore.init()`, que a su vez esperaba la respuesta de Firebase Auth (`onAuthStateChanged`). En iOS, Firebase tarda en resolver → deadlock → Vue nunca montaba.
 
-**Fix en `src/main.js`:** Inicializar auth *antes* del router:
+**Fix en `src/main.js`** *(histórico — eliminado en v4.4.0)*: Inicializar auth *antes* del router:
 
 ```js
+// (histórico — eliminado en v4.4.0)
 const authStore = useAuthStore()
 authStore.init().then(() => {
   router.isReady().then(() => {
@@ -145,7 +151,9 @@ authStore.init().then(() => {
 
 **Fix en `src/router/index.js`:** Simplificado el guard — ya no llama `init()` porque el estado de auth está listo al llegar la primera navegación.
 
-**Fix en `src/stores/auth.js`:** Agregado timeout de seguridad de 5 segundos en `init()` para evitar que la app quede colgada si Firebase no responde (sin red, cold start).
+**Fix en `src/stores/auth.js`** *(histórico — eliminado en v4.4.0)*: Agregado timeout de seguridad de 5 segundos en `init()` para evitar que la app quede colgada si Firebase no responde (sin red, cold start).
+
+> **Estado actual:** `authStore.init()` resultó código muerto y se eliminó en v4.4.0 — `main.js` monta directo con `router.isReady()`, `stores/auth.js` no tiene `init()`, y el guard espera `onAuthStateChanged` por su cuenta (`waitForAuth()` en `router/index.js`).
 
 ### Fix: login se quedaba cargando indefinidamente
 
@@ -247,12 +255,13 @@ Aumentado el padding vertical del toolbar del searchbar (`--padding-top` / `--pa
 **Frontend:**
 - `saveTokenToFirestore` usa `arrayUnion(tokenValue)` sobre el campo `tokens`. Acumula sin duplicar.
 - Variable `currentToken` en module scope guarda el token registrado en este dispositivo.
-- `unregisterCurrentDeviceToken()` exportado, hace `arrayRemove(currentToken)` y se llama antes de `signOut(auth)`. Está conectado en dos puntos: el `logout()` de `App.vue` (botón del menú lateral) y la action `logout()` del Pinia store (botón del header en Dashboard, iPhone).
+- `unregisterCurrentDeviceToken()` exportado, hace `arrayRemove(currentToken)` y se llama antes de `signOut(auth)`. Está conectado en un solo punto: la action `logout()` del Pinia store (`stores/auth.js`) — los botones de logout (menú lateral de `App.vue`, header del Dashboard) delegan en `authStore.logout()` (unificado en v4.4.0).
 
-**Backend (`imv-functions/functions/notifications.js`):**
+**Backend (`imv-functions/functions/notifications.js`, estado actual):**
+- `createNotification` (trigger onCreate de `notifications/{id}`) arma la push con `subject`/`text` y resuelve destinatarios con `resolveRecipients(type)`: lee `appConfig/notifications.recipients[type]` (editable desde imv-back); sin `type` o tipo no configurado → `DEFAULT_RECIPIENT_USER_IDS`; lista vacía → nadie (apagado intencional, se respeta).
+- `sendToUsers(userIds, notification)` envía en batch: trae los docs de usuario en paralelo y **deduplica por token entre usuarios** (un mismo dispositivo logueado con dos cuentas recibe la push UNA sola vez), recordando qué docs son dueños de cada token; luego dispara `send()` individuales en paralelo (HTTP v1).
 - Helper `getUserTokens(data)` lee `tokens[]` y cae a `token` (string) si el doc aún no migró.
-- `sendToUser(userId, notification)` itera los tokens con `Promise.all` de `send()` individuales (HTTP v1) y limpia los inválidos con `arrayRemove` cuando el error es `messaging/registration-token-not-registered`, `messaging/invalid-registration-token` o `messaging/invalid-argument`.
-- `Promise.allSettled` orquesta los 3 destinatarios en paralelo. Cada `sendToUser` tiene try/catch en cada paso (fetch de doc, send, cleanup) para que un fallo aislado no rompa el envío a los demás usuarios.
+- Limpieza: si el envío falla con `messaging/registration-token-not-registered`, `messaging/invalid-registration-token` o `messaging/invalid-argument`, el token se remueve con `arrayRemove` de **todos** los docs de usuario que lo tenían.
 
 > **Nota sobre `sendMulticast()`.** La primera versión del backend usaba `admin.messaging().sendMulticast()`, que en `firebase-admin <11` pega al endpoint legacy `/batch` de FCM. Google retiró ese endpoint el 22-06-2024 (devuelve `404`), y los pushes dejaron de llegar a *cualquier* dispositivo. La fix mínima sin upgrade del SDK fue reemplazar el batch por un loop paralelo de `send()` (que pasa por HTTP v1 y sigue activo). El comportamiento externo (formato de respuesta, cleanup) quedó idéntico.
 
