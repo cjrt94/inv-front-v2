@@ -58,7 +58,7 @@ npx cap sync ios
 
 Se eliminó el gate que exigía ≥1 foto del voucher de envío para marcar un pedido como **Entregado** (`PedidoInspector.vue`: check en `onChangeStatus`, computed `hasAnyVoucher`/`needsVoucherHint` y hints de obligatoriedad). La captura/subida del voucher sigue funcionando igual, ahora como paso opcional. Cambio espejo en imv-back v2.13.1 (mismo release del gate web).
 
-> **Versiones:** `package.json` 4.4.0 → **4.4.1**; nativas `MARKETING_VERSION` → **4.4.1** y `CURRENT_PROJECT_VERSION` 19 → **20** (Debug + Release). Falta el release real: `npm run build && npx cap sync ios` + archive/upload desde Xcode (acumula lo pendiente de v4.4.0).
+> **Versiones:** `package.json` 4.4.0 → **4.4.1**; nativas `MARKETING_VERSION` → **4.4.1** y `CURRENT_PROJECT_VERSION` 19 → **20** (Debug + Release). **Única versión sin publicar** — la tienda tiene 4.4.0 desde el 2026-07-07 (verificado contra el lookup público de App Store el 2026-08-09). Build + `cap sync ios` corridos el 2026-08-09; falta solo archive/upload desde Xcode (build 20 libre).
 
 ### Endurecimiento de seguridad + correcciones de auditoría (v4.4.0)
 
@@ -71,7 +71,7 @@ Batch derivado de la auditoría 2026-07-06. Un solo release iOS. Antes de planea
 - **Errores**: `catch` real en los `onMounted` de `CompetitorInspector`/`StockInspector` (estado de error distinguible del vacío legítimo); `refresh()` de `PedidoInspector` loguea en vez de tragar. `notificationService` registra `pushNotificationActionPerformed` para navegar al tocar la push (lee `data.route`/`data.type`; **falta que el backend `createNotification` envíe un `data` payload** para rutear a destinos específicos — hoy solo `type:'digitalOrder'` → tab pedidos).
 - **Limpieza**: eliminados `authStore.init()`/`isLoggedIn`/`loading` (código muerto — `main.js` no los usa), `fetchProductsBySkus`, el `@click` sin listener de `ProductCard`, y el `<link rel="manifest">` inexistente. Logout unificado vía `authStore.logout()`. `@capacitor/haptics`/`keyboard` se **dejaron** (Ionic los usa en runtime, no son código muerto pese a no importarse).
 
-> **Versiones:** `package.json` 4.3.1 → **4.4.0**; nativas `MARKETING_VERSION` 4.3.1 → **4.4.0** y `CURRENT_PROJECT_VERSION` 18 → **19** (Debug + Release). Falta el release real: `npm run build && npx cap sync ios` + archive/upload desde Xcode. **Verificar on-device la CSP nueva** (login, carga de datos, subida de voucher, push) antes de publicar.
+> **Versiones:** `package.json` 4.3.1 → **4.4.0**; nativas `MARKETING_VERSION` 4.3.1 → **4.4.0** y `CURRENT_PROJECT_VERSION` 18 → **19** (Debug + Release). **Publicada el 2026-07-07** en App Store (binario 4.4.0, verificado por lookup público el 2026-08-09).
 
 ### Pulido de UX de Pedidos digitales + colores semánticos (v4.3.1)
 
@@ -83,7 +83,7 @@ Iteración de UX sobre el módulo Pedidos (mismo release, aún sin publicar). No
 - **Colores semánticos** (`_config.scss`): se definieron `success`/`warning`/`danger` (con -rgb/-contrast/-shade/-tint) para que botones, pills y toasts usen la paleta de marca y no el neón por defecto de Ionic.
 - **Nativo**: `pod install` (CocoaPods 1.16.2) integró los pods `CapacitorCamera`/`CapacitorNetwork` que faltaban — el botón de voucher fallaba con *"not implemented"* hasta esto.
 
-> **Versiones:** `package.json` 4.3.0 → **4.3.1**; nativas iOS `MARKETING_VERSION` 4.3.0 → **4.3.1** y `CURRENT_PROJECT_VERSION` 17 → **18** (Debug + Release). Falta el release real: `npm run build && npx cap sync ios` + archive/upload desde Xcode.
+> **Versiones:** `package.json` 4.3.0 → **4.3.1**; nativas iOS `MARKETING_VERSION` 4.3.0 → **4.3.1** y `CURRENT_PROJECT_VERSION` 17 → **18** (Debug + Release). **Publicada** — salió dentro del binario 4.4.0 del 2026-07-07.
 
 ### Pedidos digitales + voucher de envío (v4.3.0)
 
@@ -96,7 +96,7 @@ Vista **Pedidos** (Centro de Pedidos Digitales) — gestor de estados de los ped
 - **Gate**: para marcar **Entregado** se exige ≥1 voucher (subido o pendiente en cola) — permite marcar sin señal, la subida se completa después.
 - **Deps nuevas**: `@capacitor/camera`, `@capacitor/network` → requieren `npm install` + `npx cap sync ios`. Info.plist: `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSPhotoLibraryAddUsageDescription`. Storage init en `firebase/index.js`; reglas en `imv-back/storage.rules` (`digitalOrders/*/deliveryVouchers`).
 
-> **Versiones:** `package.json` 4.2.0 → **4.3.0**; nativas iOS `MARKETING_VERSION` 4.2.0 → **4.3.0** y `CURRENT_PROJECT_VERSION` 16 → **17** (Debug + Release). Falta el release real: `npm install && npm run build && npx cap sync ios` + archive/upload desde Xcode.
+> **Versiones:** `package.json` 4.2.0 → **4.3.0**; nativas iOS `MARKETING_VERSION` 4.2.0 → **4.3.0** y `CURRENT_PROJECT_VERSION` 16 → **17** (Debug + Release). **Publicada** — salió dentro del binario 4.4.0 del 2026-07-07.
 
 ### Dashboard: productos destacados, atajos de fecha y fix de huso horario (v4.2.0)
 
@@ -106,7 +106,7 @@ Paridad parcial con el dashboard de imv-back. Toda la lógica de cómputo vive e
 - **Atajos de rango de fecha** (`Index.vue` + `DATE_SHORTCUTS`/`getDateRangeShortcut` en el servicio): fila siempre visible arriba de los filtros — Hoy / Ayer / Esta semana / Este mes / Mes pasado / Este año. Un toque setea `startDate`/`endDate` (strings `YYYY-MM-DD`) y dispara `loadData()`. Misma lógica que imv-back (semana inicia lunes, `end = hoy` donde aplica). Scroll horizontal en móvil, wrap en md+.
 - **Fix de huso horario en el chart de ventas** (`computeSalesByDay`): antes agrupaba por día **UTC** (`toISOString()`), y como Lima es UTC−5 las ventas después de las ~19:00 caían al día siguiente → barras fantasma (p. ej. hoy 13 ya mostraba una barra en el "14"). Ahora agrupa por día **local** vía el helper `toDateStr` (componentes locales, no UTC), consistente con los atajos y con imv-back (que nunca tuvo el bug: ya usaba `getFullYear/getMonth/getDate`).
 
-> **Versiones:** `package.json` 4.1.0 → **4.2.0**; nativas iOS `MARKETING_VERSION` 4.1.0 → **4.2.0** y `CURRENT_PROJECT_VERSION` 15 → **16** (`project.pbxproj`, ambas en Debug + Release). Falta el release real: `npm run build && npx cap sync ios` + archive/upload desde Xcode.
+> **Versiones:** `package.json` 4.1.0 → **4.2.0**; nativas iOS `MARKETING_VERSION` 4.1.0 → **4.2.0** y `CURRENT_PROJECT_VERSION` 15 → **16** (`project.pbxproj`, ambas en Debug + Release). **Publicada** — salió dentro del binario 4.4.0 del 2026-07-07.
 
 ### Eliminación de `@capacitor-mlkit/barcode-scanning`
 
