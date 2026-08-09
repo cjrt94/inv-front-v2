@@ -58,7 +58,7 @@ npx cap sync ios
 
 Se eliminó el gate que exigía ≥1 foto del voucher de envío para marcar un pedido como **Entregado** (`PedidoInspector.vue`: check en `onChangeStatus`, computed `hasAnyVoucher`/`needsVoucherHint` y hints de obligatoriedad). La captura/subida del voucher sigue funcionando igual, ahora como paso opcional. Cambio espejo en imv-back v2.13.1 (mismo release del gate web).
 
-> **Versiones:** `package.json` 4.4.0 → **4.4.1**; nativas `MARKETING_VERSION` → **4.4.1** y `CURRENT_PROJECT_VERSION` 19 → **20** (Debug + Release). **Única versión sin publicar** — la tienda tiene 4.4.0 desde el 2026-07-07 (verificado contra el lookup público de App Store el 2026-08-09). Build + `cap sync ios` corridos el 2026-08-09; falta solo archive/upload desde Xcode (build 20 libre).
+> **Versiones:** `package.json` 4.4.0 → **4.4.1**; nativas `MARKETING_VERSION` → **4.4.1** y `CURRENT_PROJECT_VERSION` 19 → **20** (Debug + Release). **Única versión sin publicar** — la tienda tiene 4.4.0 desde el 2026-07-07 (verificado contra el lookup público de App Store el 2026-08-09). Build + `cap sync ios` corridos el 2026-08-09; falta solo archive/upload desde Xcode (build 20 libre). El build 20 lleva además `ITSAppUsesNonExemptEncryption=false` en `Info.plist` (solo HTTPS estándar = cifrado exento): App Store Connect deja de pedir el formulario de export compliance en cada envío.
 
 ### Endurecimiento de seguridad + correcciones de auditoría (v4.4.0)
 
