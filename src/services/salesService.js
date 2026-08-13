@@ -179,21 +179,16 @@ export function computeSalesByDay(sales) {
   }
 }
 
-export function computeTopProducts(sales, products = [], limit = 10) {
-  const excludedSkus = new Set(
-    products
-      .filter((p) => p.category?.name === 'Revelados' && p.sku)
-      .map((p) => p.sku)
-  )
-
+// Desde 2026-08-13 incluye también los productos de Revelados (pedido explícito).
+// Ojo: el panel (imv-back Home.vue) mantiene su check isRevelados y los sigue
+// excluyendo de sus tablas de productos/marcas — divergencia deliberada.
+export function computeTopProducts(sales, limit = 10) {
   const map = {}
 
   sales
     .filter((s) => s.sunatDocumentType !== '07')
     .forEach((sale) => {
       ;(sale.detail || []).forEach((item) => {
-        if (item.category?.name === 'Revelados') return
-        if (item.sku && excludedSkus.has(item.sku)) return
         const key = item.sku || item.name
         if (!map[key]) {
           map[key] = { name: item.name, sku: item.sku, quantity: 0, total: 0 }
@@ -231,7 +226,7 @@ export function computeSellers(sales) {
 export function computeBrands(sales, products) {
   const skuToBrand = {}
   products.forEach((p) => {
-    if (p.sku && p.brand?.name && p.category?.name !== 'Revelados') {
+    if (p.sku && p.brand?.name) {
       skuToBrand[p.sku] = p.brand.name
     }
   })

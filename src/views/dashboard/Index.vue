@@ -256,7 +256,7 @@ const kpis = computed(() => {
 })
 
 const salesByDay = computed(() => computeSalesByDay(sales.value))
-const topProducts = computed(() => computeTopProducts(sales.value, products.value))
+const topProducts = computed(() => computeTopProducts(sales.value))
 const sellers = computed(() => computeSellers(sales.value))
 const brands = computed(() => computeBrands(sales.value, products.value))
 const featuredTable = computed(() => computeFeaturedTable(sales.value, products.value))

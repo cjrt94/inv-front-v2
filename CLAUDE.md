@@ -54,11 +54,20 @@ npx cap sync ios
 
 ## Cambios realizados
 
+### Revelados en los rankings del dashboard (v4.5.0)
+
+Los rankings **Top productos** y **Marcas** del dashboard dejan de excluir los productos de la categoría Revelados (`salesService.js`: `computeTopProducts` perdió el set `excludedSkus` y el check por `item.category` — y con ellos el parámetro `products`, su único uso, caller actualizado —; `computeBrands` perdió el check de categoría al armar `skuToBrand`). Los KPIs/totales nunca excluyeron nada (ni al Local Revelados), así que con esto Revelados aparece completo en el dashboard de la app.
+
+- **Divergencia deliberada con imv-back**: el panel mantiene su check `isRevelados` en las tablas de productos/marcas de `Home.vue` (decisión del release v2.28.0). Si se quiere paridad allí, es un cambio aparte.
+- Ojo: Top productos ordena por **unidades**, así que los ítems de revelado (alto volumen, ticket chico) pueden dominar los primeros puestos del ranking.
+
+> **Versiones:** `package.json` 4.4.1 → **4.5.0**; nativas `MARKETING_VERSION` → **4.5.0** y `CURRENT_PROJECT_VERSION` 21 → **22** (Debug + Release). Build + `cap sync ios` corridos el 2026-08-13. **Reemplaza al 4.4.1/build 21, que nunca llegó a subirse** — este release acumula ambos cambios (voucher opcional + Revelados en rankings); la tienda sigue en 4.4.0. Falta solo archive/upload desde Xcode.
+
 ### Voucher de envío opcional (v4.4.1)
 
 Se eliminó el gate que exigía ≥1 foto del voucher de envío para marcar un pedido como **Entregado** (`PedidoInspector.vue`: check en `onChangeStatus`, computed `hasAnyVoucher`/`needsVoucherHint` y hints de obligatoriedad). La captura/subida del voucher sigue funcionando igual, ahora como paso opcional. Cambio espejo en imv-back v2.13.1 (mismo release del gate web).
 
-> **Versiones:** `package.json` 4.4.0 → **4.4.1**; nativas `MARKETING_VERSION` → **4.4.1** y `CURRENT_PROJECT_VERSION` 19 → **21** (Debug + Release; el build 20 se descartó tras el rechazo de App Store — el reintento sale como **build 21**, decisión del usuario 2026-08-09). **Única versión sin publicar** — la tienda tiene 4.4.0 desde el 2026-07-07 (verificado contra el lookup público de App Store el 2026-08-09). Build + `cap sync ios` corridos el 2026-08-09; falta solo archive/upload desde Xcode. El build lleva además `ITSAppUsesNonExemptEncryption=false` en `Info.plist` (solo HTTPS estándar = cifrado exento): App Store Connect deja de pedir el formulario de export compliance en cada envío. **Deployment target iOS 14.0 → 15.0** (2026-08-09): App Store rechazó el upload del build 20 exigiendo `MinimumOSVersion` ≥ 15; se subió `IPHONEOS_DEPLOYMENT_TARGET` (4 ocurrencias del pbxproj) y `platform :ios` del Podfile + `pod install`. Sin impacto de hardware (iOS 15 corre en los mismos equipos que iOS 14, iPhone 6s+). Los pods quedan en 13.0 por sus podspecs — normal, la validación solo mira el target App.
+> **Versiones:** `package.json` 4.4.0 → **4.4.1**; nativas `MARKETING_VERSION` → **4.4.1** y `CURRENT_PROJECT_VERSION` 19 → **21** (Debug + Release; el build 20 se descartó tras el rechazo de App Store — el reintento sale como **build 21**, decisión del usuario 2026-08-09). **Nunca se publicó**: antes del archive/upload llegó la v4.5.0 (build 22), que la absorbe. La tienda tiene 4.4.0 desde el 2026-07-07 (verificado contra el lookup público de App Store el 2026-08-09). El build lleva además `ITSAppUsesNonExemptEncryption=false` en `Info.plist` (solo HTTPS estándar = cifrado exento): App Store Connect deja de pedir el formulario de export compliance en cada envío. **Deployment target iOS 14.0 → 15.0** (2026-08-09): App Store rechazó el upload del build 20 exigiendo `MinimumOSVersion` ≥ 15; se subió `IPHONEOS_DEPLOYMENT_TARGET` (4 ocurrencias del pbxproj) y `platform :ios` del Podfile + `pod install`. Sin impacto de hardware (iOS 15 corre en los mismos equipos que iOS 14, iPhone 6s+). Los pods quedan en 13.0 por sus podspecs — normal, la validación solo mira el target App.
 
 ### Endurecimiento de seguridad + correcciones de auditoría (v4.4.0)
 
