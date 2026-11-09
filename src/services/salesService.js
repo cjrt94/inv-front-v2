@@ -13,7 +13,7 @@ export const ESTABLISHMENTS = [
   'Local 461',
   'Local Leticia',
   'Local Revelados',
-  'Local Los Olivos'
+  'Local Independencia'
 ]
 
 function todayStart() {
