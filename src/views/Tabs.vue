@@ -3,7 +3,7 @@
     <ion-tabs>
       <ion-router-outlet />
 
-      <ion-tab-bar slot="bottom" class="ion-hide-md-up">
+      <ion-tab-bar slot="bottom" class="tab-bar-compact-only">
         <ion-tab-button tab="dashboard" href="/tabs/dashboard">
           <ion-icon :icon="homeOutline" />
           <ion-label>Dashboard</ion-label>

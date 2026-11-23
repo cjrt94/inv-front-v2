@@ -11,8 +11,17 @@
 @import './components/card';
 
 // ── Global overrides for Ionic ────────────────────────────────────────
+// `ion-content` is the only Ionic container that does NOT apply the safe areas
+// (`ion-toolbar` and `ion-tab-bar` do, and the variables are already set on
+// `html`), so without this the page content runs under the vertical rail the
+// iPhone Duo draws along one edge. Left and right are declared separately because
+// on that device they are not mirrored: in Split View the rail can sit on the left.
+// It covers the whole app, the three inspectors included, because all of them
+// mount their content inside an `ion-content`.
 ion-content {
   --background: var(--ion-background-color, #f5f7f9);
+  --padding-start: var(--ion-safe-area-left, 0px);
+  --padding-end: var(--ion-safe-area-right, 0px);
 }
 
 ion-toolbar {
@@ -29,6 +38,16 @@ ion-title {
 ion-tab-bar {
   --background: #ffffff;
   border-top: 1px solid $lighter-grey;
+}
+
+// The tab bar only exists in the compact layout: from `wide` up the split-pane
+// side menu replaces it. `ion-hide-md-up` is not used because it is pinned to
+// Ionic's 768 px, and with that threshold the Duo's inner screen (669 px in
+// portrait) would show the side menu and the tab bar at the same time.
+.tab-bar-compact-only {
+  @include respond-to(wide) {
+    display: none !important;
+  }
 }
 
 ion-tab-button {
@@ -115,7 +134,7 @@ ion-modal.date-picker-modal {
 }
 
 ion-modal.competitor-modal {
-  --width: 90vw;
+  --width: calc(90vw - var(--ion-safe-area-left, 0px) - var(--ion-safe-area-right, 0px));
   --max-width: 1000px;
   --height: 85vh;
   --max-height: 800px;
@@ -123,7 +142,7 @@ ion-modal.competitor-modal {
 }
 
 ion-modal.stock-modal {
-  --width: 80vw;
+  --width: calc(80vw - var(--ion-safe-area-left, 0px) - var(--ion-safe-area-right, 0px));
   --max-width: 600px;
   --height: 80vh;
   --max-height: 700px;
@@ -177,7 +196,7 @@ ion-modal.stock-modal {
     --padding-end: 14px;
   }
 
-  @include respond-to(md) {
+  @include respond-to(wide) {
     flex-wrap: wrap;
     overflow-x: visible;
   }

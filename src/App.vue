@@ -1,6 +1,6 @@
 <template>
   <ion-app>
-    <ion-split-pane content-id="main-content" when="md">
+    <ion-split-pane content-id="main-content" :when="WIDE_LAYOUT">
       <ion-menu
         content-id="main-content"
         type="overlay"
@@ -92,13 +92,13 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/firebase'
 import { registerPushNotifications } from '@/services/notificationService'
 import { initVoucherSync } from '@/services/digitalOrdersService'
-import { useBreakpoint } from '@/composables/useBreakpoint'
+import { useBreakpoint, WIDE_LAYOUT } from '@/composables/useBreakpoint'
 import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const isLargeScreen = useBreakpoint('(min-width: 768px)')
+const isLargeScreen = useBreakpoint()
 
 const firebaseUser = ref(auth.currentUser)
 const userRole = ref(null)

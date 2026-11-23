@@ -186,7 +186,7 @@ import { useAuthStore } from '@/stores/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 
-const isLargeScreen = useBreakpoint('(min-width: 768px)')
+const isLargeScreen = useBreakpoint()
 const datePickerModalProps = computed(() =>
   isLargeScreen.value
     ? { class: 'date-picker-modal' }
@@ -310,7 +310,7 @@ onMounted(loadData)
     padding: $space-8 $space-16 $space-12;
   }
 
-  @include respond-to(md) {
+  @include respond-to(wide) {
     display: flex;
     align-items: stretch;
     gap: $space-12;
@@ -374,7 +374,7 @@ onMounted(loadData)
     margin: 0 !important;
   }
 
-  @include respond-to(md) {
+  @include respond-to(wide) {
     grid-template-columns: 1fr 1fr;
 
     > :first-child {

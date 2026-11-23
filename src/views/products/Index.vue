@@ -95,7 +95,7 @@ import StockInspector from './StockInspector.vue'
 import { fetchProducts } from '@/services/productService'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 
-const isLargeScreen = useBreakpoint('(min-width: 768px)')
+const isLargeScreen = useBreakpoint()
 
 const competitorModalProps = computed(() =>
   isLargeScreen.value
@@ -170,7 +170,7 @@ onMounted(loadProducts)
   padding: 12px 8px 4px;
   background: #ffffff;
 
-  @include respond-to(md) {
+  @include respond-to(wide) {
     background: transparent;
     max-width: 480px;
     padding: $space-12 $space-16 $space-8;
@@ -189,7 +189,7 @@ onMounted(loadProducts)
     min-width: 0;
   }
 
-  @include respond-to(md) {
+  @include respond-to(wide) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: $space-12;
     padding: $space-8 $space-16 $space-16;

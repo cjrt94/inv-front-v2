@@ -300,6 +300,11 @@ onMounted(async () => {
 }
 
 .inspector-body {
+  // Deliberately stays at `md` (768) rather than `wide` (600) like the page
+  // grids: what matters here is not the viewport but the modal width, which is
+  // 90% of the screen. On the iPhone Duo's inner screen in portrait that is about
+  // 600 px, and splitting it 3fr/2fr leaves the price chart at 360 px. One column
+  // reads better.
   @include respond-to(md) {
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);

@@ -113,7 +113,7 @@ import {
 } from '@/services/orderStatus'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 
-const isLargeScreen = useBreakpoint('(min-width: 768px)')
+const isLargeScreen = useBreakpoint()
 // iPad: modal centrado; iPhone: full-screen (evita que se vean el header/segment
 // del listado por detrás del sheet → doble-header confuso).
 const modalProps = computed(() =>
@@ -183,7 +183,7 @@ onMounted(loadOrders)
   grid-template-columns: minmax(0, 1fr);
   gap: $space-8;
 
-  @include respond-to(md) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @include respond-to(wide) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   @include respond-to(lg) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 

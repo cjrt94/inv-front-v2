@@ -30,8 +30,14 @@
   color: $color;
 }
 
+// `wide` is the wide-layout threshold: fixed side menu, two-column grids and
+// centered modals. It sits at 600 px instead of `md`'s 768 because of the iPhone
+// Duo: its inner screen is 669 px wide in portrait, so with 768 a 7.6-inch screen
+// would keep showing the phone layout.
+// JS mirror: the `WIDE_LAYOUT` constant in composables/useBreakpoint.js.
 $breakpoints: (
   sm: 576px,
+  wide: 600px,
   md: 768px,
   lg: 992px,
   xl: 1200px
